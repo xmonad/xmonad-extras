@@ -22,7 +22,7 @@ flag with_split
 flag with_hint
   description: Build modules depending on hint(for evaluating Haskell expressions at runtime).
 
-flag with_libmpd
+flag with_mpd
   description: Build modules depending on libmpd.
 
 library
