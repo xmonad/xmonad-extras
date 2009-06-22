@@ -19,17 +19,25 @@ flag with_parsec
 flag with_split
   description: Build modules depending on Data.Split
 
+flag with_hint
+  description: Build modules depending on hint(for evaluating Haskell expressions at runtime).
+
 library
     if flag(small_base)
         build-depends: base >= 3 && < 4, containers, directory, process, random, old-time, old-locale
     else
         build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.8 && <0.9, parsec, split
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.8 && <0.9, xmonad-contrib>=0.8 && <0.9
     ghc-options:        -Wall
 
     if impl (ghc == 6.10.1) && arch (x86_64)
         ghc-options:    -O0
 
     if flag(with_parsec) && flag(with_split)
+        build-depends: parsec, split
         exposed-modules: XMonad.Actions.Volume
+
+    if flag(with_hint)
+        build-depends: hint
+        exposed-modules: XMonad.Actions.Eval
