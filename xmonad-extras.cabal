@@ -22,6 +22,9 @@ flag with_split
 flag with_hint
   description: Build modules depending on hint(for evaluating Haskell expressions at runtime).
 
+flag with_libmpd
+  description: Build modules depending on libmpd.
+
 library
     if flag(small_base)
         build-depends: base >= 3 && < 4, containers, directory, process, random, old-time, old-locale
@@ -41,3 +44,7 @@ library
     if flag(with_hint)
         build-depends: hint
         exposed-modules: XMonad.Actions.Eval
+
+    if flag(with_mpd)
+        build-depends: libmpd
+        exposed-modules: XMonad.Prompt.MPD
