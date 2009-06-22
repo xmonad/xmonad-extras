@@ -247,9 +247,10 @@ sepBy' p sep = liftM2 (:) p loop where
 osdCat :: MonadIO m => Double -> (Bool -> String) -> m ()
 osdCat vol opts = do
   m <- getMute
-  spawn $ "osd_cat -b percentage -P " ++ show (truncate vol) ++ opts m
+  spawn $ "osd_cat -b percentage -P " ++ show (truncate vol :: Integer) ++ opts m
 
 -- | Default options for displaying the volume.
+defaultOSDOpts :: Bool -> String
 defaultOSDOpts mute = "--align=center --pos=top --delay=1 --text=\"Volume" ++
                       (if mute then "[muted]\" " else "\" ") ++
                       "--font='-bitstream-bitstream vera sans-bold-r-*-*-10-*-*-*-*-*-*-*' " ++
