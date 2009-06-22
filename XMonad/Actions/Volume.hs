@@ -46,7 +46,10 @@ module XMonad.Actions.Volume (
     setVolumeMuteChannels,
     modifyVolumeChannels,
     modifyMuteChannels,
-    modifyVolumeMuteChannels
+    modifyVolumeMuteChannels,
+
+    defaultOSDOpts,
+    osdCat
 ) where
 
 import Control.Monad
@@ -237,4 +240,19 @@ extras = sepBy' (char '[' >> upTo ']') (char ' ')
 sepBy' :: Parser a -> Parser b -> Parser [a]
 sepBy' p sep = liftM2 (:) p loop where
     loop = (sep >> (liftM2 (:) p loop <|> return [])) <|> return []
+
+-- | Helper function to output current volume via osd_cat.(Needs the osd_cat executable).
+-- The second parameter is passed True when the speakers are muted and should
+-- return the options to pass to osd_cat.
+osdCat :: MonadIO m => Double -> (Bool -> String) -> m ()
+osdCat vol opts = do
+  m <- getMute
+  spawn $ "osd_cat -b percentage -P " ++ show (truncate vol) ++ opts m
+
+-- | Default options for displaying the volume.
+defaultOSDOpts mute = "--align=center --pos=top --delay=1 --text=\"Volume" ++
+                      (if mute then "[muted]\" " else "\" ") ++
+                      "--font='-bitstream-bitstream vera sans-bold-r-*-*-10-*-*-*-*-*-*-*' " ++
+                      "--outline=1"
+
 -- }}}
