@@ -33,7 +33,7 @@ import System.IO
 import XMonad
 import XMonad.Prompt
 import XMonad.Prompt.Input
-import Data.List (sort,nub,isPrefixOf,findIndex)
+import Data.List (nub,isPrefixOf,findIndex)
 
 
 -- $usage

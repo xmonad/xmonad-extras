@@ -43,7 +43,7 @@ library
 
     if flag(with_hint)
         build-depends: hint
-        exposed-modules: XMonad.Actions.Eval
+        exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 
     if flag(with_mpd)
         build-depends: libmpd
