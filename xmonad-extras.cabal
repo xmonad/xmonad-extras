@@ -1,0 +1,35 @@
+name:               xmonad-extras
+version:            0.0
+homepage:           http://projects.haskell.org/xmonad-extras
+synopsis:           Third party extensions for xmonad with wacky dependencies
+category:           System
+license:            BSD3
+license-file:       LICENSE
+author:             The Daniels Schoepe and Wagner
+maintainer:         daniel@wagner-home.com
+cabal-version:      >= 1.2.1
+build-type:         Simple
+
+flag small_base
+  description: Choose the new smaller, split-up base package.
+
+flag with_parsec
+  description: Build modules depending on the parsec package
+
+flag with_split
+  description: Build modules depending on Data.Split
+
+library
+    if flag(small_base)
+        build-depends: base >= 3 && < 4, containers, directory, process, random, old-time, old-locale
+    else
+        build-depends: base < 3
+
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.8 && <0.9, parsec, split
+    ghc-options:        -Wall
+
+    if impl (ghc == 6.10.1) && arch (x86_64)
+        ghc-options:    -O0
+
+    if flag(with_parsec) && flag(with_split)
+        exposed-modules: XMonad.Actions.Volume
