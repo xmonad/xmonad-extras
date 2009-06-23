@@ -76,7 +76,7 @@ defaultEvalConfig = EvalConfig { handleError = handleErrorDefault
 
 -- | Default way to handle(in this case: display) an error during interpretation of an expression.
 handleErrorDefault :: InterpreterError -> X String
-handleErrorDefault err = io (safeSpawn "/usr/bin/xmessage" $ replace (show err) "\\n" "\n") >>
+handleErrorDefault err = io (safeSpawn "/usr/bin/xmessage" [replace (show err) "\\n" "\n"]) >>
                          return "Error"
 
 -- | Returns an Interpreter action that loads the desired modules and interprets the expression.
