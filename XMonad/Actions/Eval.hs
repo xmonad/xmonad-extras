@@ -4,7 +4,7 @@
 -- Copyright   :  (c) 2009 Daniel Schoepe
 -- License     :  BSD3-style (see LICENSE)
 --
--- Maintainer  :  Daniel Schoepe <asgaroth_@gmx.de>
+-- Maintainer  :  Daniel Schoepe <daniel.schoepe@gmail.com>
 -- Stability   :  unstable
 -- Portability :  unportable
 --

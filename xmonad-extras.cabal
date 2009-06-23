@@ -6,7 +6,7 @@ category:           System
 license:            BSD3
 license-file:       LICENSE
 author:             The Daniels Schoepe and Wagner
-maintainer:         daniel@wagner-home.com
+maintainer:         daniel@wagner-home.com, daniel.schoepe@gmail.com
 cabal-version:      >= 1.2.1
 build-type:         Simple
 
