@@ -49,8 +49,8 @@ library
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        build-depends: hint
-        exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
+        build-depends: hint, network
+        exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
         build-depends: libmpd
