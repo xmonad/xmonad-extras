@@ -156,6 +156,9 @@ modifyVolumeMuteChannels cs = modify getVolumeMuteChannels (\cs' -> uncurry (set
 geomMean :: Floating a => [a] -> a
 geomMean xs = product xs ** (recip . fromIntegral . length $ xs)
 
+clip :: (Num t, Ord t) => t -> t
+clip = min 100 . max 0
+
 modify :: Monad m => (arg -> m value) -> (arg -> value -> m ()) -> arg -> (value -> value) -> m value
 modify get set cs f = do
     v <- liftM f $ get cs
@@ -174,14 +177,14 @@ amixerSet    :: Double -> Bool ->  String  -> IO String
 amixerGetAll :: [String] -> IO (Double, Bool)
 amixerGet    ::  String  -> IO String
 amixerSetAll    = (mapM_ .) . amixerSet
-amixerSet v m s = outputOf $ "amixer set '" ++ s ++ "' " ++ show v ++ "% " ++ (if m then "" else "un") ++ "mute"
+amixerSet v m s = outputOf $ "amixer set '" ++ s ++ "' " ++ show (clip v) ++ "% " ++ (if m then "" else "un") ++ "mute"
 amixerGetAll    = fmap parseAmixerGetAll . mapM amixerGet
 amixerGet     s = outputOf $ "amixer get \'" ++ s ++ "\'"
 
 amixerSetVolumeOnlyAll :: Double -> [String] -> IO ()
 amixerSetVolumeOnly    :: Double ->  String  -> IO String
 amixerSetVolumeOnlyAll  = mapM_ . amixerSetVolumeOnly
-amixerSetVolumeOnly v s = outputOf $ "amixer set '" ++ s ++ "' " ++ show v ++ "% "
+amixerSetVolumeOnly v s = outputOf $ "amixer set '" ++ s ++ "' " ++ show (clip v) ++ "% "
 
 amixerSetMuteOnlyAll :: Bool -> [String] -> IO ()
 amixerSetMuteOnly    :: Bool ->  String  -> IO String
