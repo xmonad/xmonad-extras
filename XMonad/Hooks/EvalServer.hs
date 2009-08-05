@@ -48,6 +48,7 @@ import Network
 --
 -- This module is highly experimental and might not work as expected or even cause deadlocks, due
 -- to concurrency issue and the fact that xlib isn't reentrant.
+--
 -- This module lets you create a server that evaluates Haskell expression in
 -- the context of the currently running xmonad, which lets you control xmonad from
 -- another process(e.g. a script)
