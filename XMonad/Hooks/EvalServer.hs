@@ -45,14 +45,14 @@ import Network
 --
 -- WARNING: This module will have the following issue if xmonad wasn't compiled with -threaded
 -- (requires a modified xmonad-version): Expressions will only get evaluated when xmonad
--- receives an event, for example the focus changes.
+-- receives an event, for example when the focus changes.
 --
--- This module is highly experimental and might not work as expected or even cause deadlocks, due
--- to concurrency issue and the fact that xlib isn't reentrant.
+-- This module is highly experimental and might not work as expected or even cause deadlocks
+-- when used with -threaded, due to the fact that xlib isn't reentrant.
 --
--- This module lets you create a server that evaluates Haskell expression in
--- the context of the currently running xmonad, which lets you control xmonad from
--- another process(e.g. a script)
+-- This module lets you create a server that evaluates Haskell expressions in
+-- the context of the currently running xmonad instance, which lets you control xmonad from
+-- another process(e.g. a script).
 -- To use this module add something like this to your xmonad.hs:
 --
 -- > import XMonad.Hooks.EvalServer
@@ -65,11 +65,13 @@ import Network
 -- >                   startupHook = defaultServer evData 4242
 -- >   ..
 -- >   }
-
--- You can then send Haskell expression that are to be evaluated over the socket.
+--
+-- You can then send Haskell expressions that are to be evaluated over the socket.
 -- Example using telnet:
+--
 -- > telnet localhost 4242
 -- > windows $ W.view "1"
+--
 
 -- $documentation
 
@@ -78,7 +80,7 @@ data EvalServerData = EVData { evThreads :: MVar [(ThreadId,Handle)]
                              , evCommands :: MVar [(String,Handle)]
                              , evSocket :: MVar Socket }
 
--- | Creates an empty MVar to store received commands. A variable of this
+-- | Creates the structure to store received commands and other data. A variable of this
 -- type has to be passed to the other functions of this module.
 initEVData :: MonadIO m => m EvalServerData
 initEVData = liftIO $ liftM3 EVData (newMVar []) newEmptyMVar newEmptyMVar -- not so pretty, but fits on one line
