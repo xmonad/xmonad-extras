@@ -20,10 +20,9 @@ module XMonad.Hooks.EvalServer (
                                -- * Documentation
                                -- $documentation
 
-                                initCommands
+                                initEVData
                                ,startServer
                                ,defaultServer
-                               ,CommandVar
                                ,defaultServerConfig
                                ,evalEventHook
                                ) where
@@ -31,7 +30,6 @@ module XMonad.Hooks.EvalServer (
 import Control.Concurrent
 import Control.Monad
 import Control.Concurrent.MVar
-import Control.Exception
 
 import Data.Monoid
 
@@ -42,32 +40,29 @@ import XMonad
 
 import Network
 
-type CommandVar = MVar [(String,Handle)]
-
 -- $usage
 --
--- WARNING: This module will have issues if xmonad wasn't compiled with -threaded
+-- WARNING: This module will have the following issue if xmonad wasn't compiled with -threaded
 -- (requires a modified xmonad-version): Expressions will only get evaluated when xmonad
 -- receives an event, for example the focus changes.
 --
+-- This module is highly experimental and might not work as expected or even cause deadlocks, due
+-- to concurrency issue and the fact that xlib isn't reentrant.
 -- This module lets you create a server that evaluates Haskell expression in
 -- the context of the currently running xmonad, which lets you control xmonad from
 -- another process(e.g. a script)
 -- To use this module add something like this to your xmonad.hs:
 --
 -- > import XMonad.Hooks.EvalServer
--- > import Network
 --
 -- > main = do
--- >   cmdVar <- initCommands
--- >   socket <- defaultServer socket 4242
+-- >   evData <- initEVData
 -- >   ..
 -- >   xmonad $ .. $ defaultConfig {
--- >                   handleEventHook = evalEventHook defaultServerConfig cmdVar
+-- >                   handleEventHook = evalEventHook defaultServerConfig evData
+-- >                   startupHook = defaultServer evData 4242
 -- >   ..
 -- >   }
--- >   sClose socket -- if you forget this, the module will cease to work when xmonad
--- >                 -- is restarted.
 
 -- You can then send Haskell expression that are to be evaluated over the socket.
 -- Example using telnet:
@@ -76,60 +71,83 @@ type CommandVar = MVar [(String,Handle)]
 
 -- $documentation
 
+data EvalServerData = EVData { evThreads :: MVar [(ThreadId,Handle)]
+                             , evCommands :: MVar [(String,Handle)]
+                             , evSocket :: MVar Socket }
+
 -- | Creates an empty MVar to store received commands. A variable of this
 -- type has to be passed to the other functions of this module.
-initCommands :: MonadIO m => m CommandVar
-initCommands = liftIO newEmptyMVar
+initEVData :: MonadIO m => m EvalServerData
+initEVData = liftIO $ liftM3 EVData (newMVar []) newEmptyMVar newEmptyMVar -- not so pretty, but fits on one line
 
 -- | Creates a server listening on a TCP socket with the given port number.
-defaultServer :: CommandVar -> PortNumber -> IO Socket
+defaultServer :: MonadIO m => EvalServerData -> PortNumber -> m ()
 defaultServer cv = startServer cv . PortNumber
 
 -- | Creates a server listening on the specified port(can also be a unix domain socket).
-startServer :: CommandVar -> PortID -> IO Socket
-startServer var port = do
+startServer :: MonadIO m => EvalServerData -> PortID -> m ()
+startServer evdata port = liftIO $ do
   s <- listenOn port
-  forkIO $
-         bracket (return s) sClose
-                 (\sock -> forever $ accept sock >>= forkIO . clientThread var)
-  return s
+  putMVar (evSocket evdata) s
+  tid <- forkIO . forever $ accept s >>= clientThread evdata
+  modifyMVar_ (evThreads evdata) $ return . ((tid,stdout):)
+  return ()
 
 -- | Default config to evaluate the received expressions
 defaultServerConfig :: EvalConfig
 defaultServerConfig = defaultEvalConfig { handleError = return . show }
 
 -- | This event hook causes commands to be executed when they are received.
-evalEventHook :: EvalConfig -> CommandVar -> Event -> X All
-evalEventHook evConfig tCmds (ClientMessageEvent { ev_message_type = mt }) = do
+evalEventHook :: EvalConfig -> EvalServerData -> Event -> X All
+evalEventHook evConfig evdata (ClientMessageEvent { ev_message_type = mt }) = do
   dpy <- asks display
-  at <- io $ internAtom dpy "XMONAD_EVALSRV_UPD" False
-  if (mt == at)
+  update <- io $ internAtom dpy "XMONAD_EVALSRV_UPD" False
+  restrt <- io $ internAtom dpy "XMONAD_RESTART" False
+  if mt == update
      then do
-       cmds <- io . takeMVar $ tCmds
-       forM_ cmds $ \(cmd,h) ->
+       cmds <- io . tryTakeMVar . evCommands $ evdata
+       whenJust cmds $ mapM_ $ \(cmd,h) ->
           evalExpressionWithReturn evConfig cmd >>= io . hPutStrLn h
        return $ All False
-     else return $ All True
+     else if mt == restrt
+             then shutdownServer evdata >> return (All True)
+             else return $ All True
 evalEventHook _ _ _ = return $ All True
 
+shutdownServer :: MonadIO m => EvalServerData -> m ()
+shutdownServer evdata = liftIO $ do
+  -- we need to kill the reading thread first, otherwise hClose will block
+  modifyMVar_ (evThreads evdata) $ (>> return []) . mapM_ (\(tid,h) -> killThread tid >> hClose h)
+  modifyMVar_ (evSocket evdata) $ \s -> sClose s >> return s
+
 -- | Handler for an individual client.
-clientThread :: CommandVar -> (Handle,HostName,PortNumber) -> IO ()
-clientThread var (h,_,_) = do
-  hSetBuffering h LineBuffering
-  forever $ hGetLine h >>= handleCommand h var
+clientThread :: EvalServerData -> (Handle,HostName,PortNumber) -> IO ()
+clientThread evdata (h,_,_) = do
+  tid <- forkIO $ do
+           hSetBuffering h LineBuffering
+           forever $ hGetLine h >>= handleCommand h evdata
+  modifyMVar_ (evThreads evdata) $ return . ((tid,h):)
 
 -- | Handles a received command. TODO: Add a more elaborate protocol(e.g. one that allows shutting
 -- down the server).
-handleCommand :: Handle -> MVar [(String,Handle)] -> String -> IO ()
-handleCommand h var cmd = openDisplay "" >>= \dpy -> do
-  rootw <- rootWindow dpy $ defaultScreen dpy
-  a <- internAtom dpy "XMONAD_EVALSRV_UPD" False
-  empt <- isEmptyMVar var
+handleCommand :: Handle -> EvalServerData -> String -> IO ()
+handleCommand h evdata cmd = openDisplay "" >>= \dpy -> do
+  let cmds = evCommands evdata
+  empt <- isEmptyMVar cmds
   if empt
-     then putMVar var [(cmd,h)]
-     else modifyMVar_ var (return . ((cmd,h):))
-  allocaXEvent $ \e -> do
-    setEventType e clientMessage
-    setClientMessageEvent e rootw a 32 0 currentTime
-    sendEvent dpy rootw False structureNotifyMask e
-    sync dpy False
+     then putMVar cmds [(cmd,h)]
+     else modifyMVar_ cmds (return . ((cmd,h):))
+  -- normally we should use forkProcess here, but this doesn't work
+  -- due to ghc issue 1185: http://hackage.haskell.org/trac/ghc/ticket/1185
+  -- forkIO with -threaded could potentially cause problems, as the Xlib is
+  -- not reentrant, so not using a -threaded version of xmonad and sending
+  -- some event to the root window to have getEvent return might be preferable.
+  forkIO $ do
+    rootw <- rootWindow dpy $ defaultScreen dpy
+    a <- internAtom dpy "XMONAD_EVALSRV_UPD" False
+    allocaXEvent $ \e -> do
+                  setEventType e clientMessage
+                  setClientMessageEvent e rootw a 32 0 currentTime
+                  sendEvent dpy rootw False structureNotifyMask e
+                  sync dpy False
+  return ()
