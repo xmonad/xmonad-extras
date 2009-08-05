@@ -25,6 +25,7 @@ module XMonad.Hooks.EvalServer (
                                ,defaultServer
                                ,defaultServerConfig
                                ,evalEventHook
+                               ,EvalServerData
                                ) where
 
 import Control.Concurrent
@@ -72,6 +73,7 @@ import Network
 
 -- $documentation
 
+-- | Data type for storing information such as the socket and received commands
 data EvalServerData = EVData { evThreads :: MVar [(ThreadId,Handle)]
                              , evCommands :: MVar [(String,Handle)]
                              , evSocket :: MVar Socket }
