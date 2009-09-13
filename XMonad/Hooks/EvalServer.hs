@@ -72,6 +72,14 @@ import Network
 -- > telnet localhost 4242
 -- > windows $ W.view "1"
 --
+-- By default, xmonad is not built with -threaded, so commands will
+-- only be executed after an event is received. xmonadcmd, which is
+-- included in this package, is a workaround to this problem. After
+-- sending the command, it also sends an event to the root window
+-- to trigger the execution of the command.
+--
+-- For more information run 'xmonadcmd --help'
+--
 
 -- $documentation
 
