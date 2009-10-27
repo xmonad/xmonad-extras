@@ -35,7 +35,7 @@ library
     else
         build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.8 && <0.9, xmonad-contrib>=0.8 && <0.9
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <1.0, xmonad-contrib>=0.9 && <1.0
     ghc-options:        -Wall
 
     if flag(testing)
@@ -58,7 +58,7 @@ library
 
 executable xmonadcmd
     main-is: XMonadCmd.hs
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.8 && <0.9, xmonad-contrib>=0.8 && <0.9
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <1.0, xmonad-contrib>=0.9 && <1.0
     ghc-options:        -Wall
     if !flag(with_hint)
         Buildable: False
