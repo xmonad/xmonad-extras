@@ -50,21 +50,22 @@ library
 
     if flag(with_hint)
         build-depends: hint, network
-        exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval XMonad.Hooks.EvalServer
+        exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
+--                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
         build-depends: libmpd
         exposed-modules: XMonad.Prompt.MPD
 
-executable xmonadcmd
-    main-is: XMonadCmd.hs
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <1.0, xmonad-contrib>=0.9 && <1.0
-    ghc-options:        -Wall
-    if !flag(with_hint)
-        Buildable: False
-
-    if flag(with_hint)
-        build-depends: network
-
-    if flag(testing)
-        ghc-options:  -Werror
+-- executable xmonadcmd
+--     main-is: XMonadCmd.hs
+--     build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <1.0, xmonad-contrib>=0.9 && <1.0
+--     ghc-options:        -Wall
+--     if !flag(with_hint)
+--         Buildable: False
+-- 
+--     if flag(with_hint)
+--         build-depends: network
+-- 
+--     if flag(testing)
+--         ghc-options:  -Werror
