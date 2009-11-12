@@ -42,7 +42,7 @@ library
         ghc-options:    -Werror
 
     if impl (ghc == 6.10.1) && arch (x86_64)
-        ghc-options:    -O0
+        ghc-options:    --disable-optimizations
 
     if flag(with_parsec) && flag(with_split)
         build-depends: parsec, split
