@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.0
+version:            0.9
 homepage:           http://projects.haskell.org/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 category:           System
