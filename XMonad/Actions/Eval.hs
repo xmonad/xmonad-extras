@@ -28,7 +28,6 @@ module XMonad.Actions.Eval (
 import XMonad.Core
 import XMonad.Util.Run
 import Language.Haskell.Interpreter
-import Control.Monad
 import Data.List
 
 -- $usage

@@ -28,6 +28,7 @@ module XMonad.Prompt.MPD (-- * Usage
 import Control.Monad
 import Control.Applicative
 import Data.Char
+import Data.Either
 import Network.MPD
 import System.IO
 import XMonad
@@ -69,11 +70,7 @@ findMatching' xp s m = do
 -- | Lets the user filter out non-matching with a prompt by supplied criteria.
 findMatching :: RunMPD -> XPConfig -> [Song -> String] -> X [Song]
 findMatching runMPD xp ms = do
-  -- rs <- io (runMPD $ rights `fmap` listAllInfo "")
-  -- workaround due to a bug in libmpd(reported and fixed in darcs).
-  -- should be replaced by the line above when a new version is released.
-  -- (last version with this bug: 0.3.1)
-  rs <- io . runMPD . fmap concat $ mapM findArtist =<< listArtists
+  rs <- io (runMPD $ rights `fmap` listAllInfo "")
   case rs of
     Left e -> io (hPutStrLn stderr $ "MPD error: " ++ show e)  >> return []
     Right s -> foldM (findMatching' xp) s ms
@@ -83,7 +80,7 @@ findOrAdd :: Song -> MPD PLIndex
 findOrAdd s = playlistInfo Nothing >>= \pl -> do
   case findIndex ((== sgFilePath s) . sgFilePath) pl of
     Just i -> return . Pos . fromIntegral $ i
-    Nothing -> ID <$> (addId . sgFilePath $ s)
+    Nothing -> ID <$> (flip addId Nothing . sgFilePath $ s)
 
 -- | Add all selected songs to the playlist if they are not on it.
 addMatching :: RunMPD -> XPConfig -> [Song -> String] -> X [PLIndex]
