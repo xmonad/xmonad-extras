@@ -126,8 +126,11 @@ For constructing things to modify a config:
 > insertInto action hold prec field v
 
  * @action@  is an instance of 'Mode' so you only need to write 'ModifyIO' to describe how to access this field.
+
  * @hold@    is 'HTrue' if you don't want to overwrite a preexisting value at the same @prec@. This is for things that should be applied once-only.
+
  * @field@   used with the 'Mode'
+
  * @v@       the value that is being updated (or a function if you use 'Modify' or similar)
 
 -}
