@@ -19,7 +19,9 @@ Implementation
  * "XMonad.Config.Alt.Internal"
 
 -}
-module XMonad.Config.Alt (module XMonad.Config.Alt.Internal, hBuild) where
+module XMonad.Config.Alt (
+  module XMonad.Config.Alt.Desktop,
+  module XMonad.Config.Alt.Internal) where
 
-import Data.HList (hBuild)
 import XMonad.Config.Alt.Internal
+import XMonad.Config.Alt.Desktop

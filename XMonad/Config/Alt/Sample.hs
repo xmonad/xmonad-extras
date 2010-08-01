@@ -1,10 +1,10 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module XMonad.Config.Alt.Sample where
 import XMonad.Config.Alt as C
 import XMonad
 import qualified XMonad.Hooks.ManageDocks
 import qualified XMonad.Hooks.DynamicLog
-import Data.HList
 
 ex1, ex2 :: IO ()
 ex1 = runConfig $ hBuild

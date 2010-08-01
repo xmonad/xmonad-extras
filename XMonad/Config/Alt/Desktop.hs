@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module XMonad.Config.Alt.Desktop where
 
 import qualified XMonad as X
@@ -6,14 +7,13 @@ import qualified XMonad.Hooks.EwmhDesktops as E
 import qualified XMonad.Hooks.ManageDocks as ManageDocks
 import qualified XMonad.Hooks.DynamicLog as DynamicLog
 import XMonad.Config.Alt.Internal
-import Control.Monad
 import Control.Monad.Trans
 
 $(decNat "avoidStrutsPrec" 1)
 $(decNat "statusBarPrec" 2)
 $(decNat "ewmhPrec" 2)
 
-ewmh c = ins' ewmhPrec hTrue LayoutHook (liftM E.ewmh)
+ewmh c = ins' ewmhPrec hTrue LayoutHook (liftM E.ewmh) c
 
 avoidStrutsOn a = ins' avoidStrutsPrec hTrue
                   (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) =<<)

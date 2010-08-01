@@ -1,20 +1,22 @@
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE
+    OverlappingInstances
+    ,EmptyDataDecls
+    ,FlexibleContexts
+    ,FlexibleInstances
+    ,FunctionalDependencies
+    ,GeneralizedNewtypeDeriving
+    ,KindSignatures
+    ,MultiParamTypeClasses
+    ,NoMonomorphismRestriction
+    ,ScopedTypeVariables
+    ,TemplateHaskell
+    ,TypeOperators
+    ,TypeSynonymInstances
+    ,UndecidableInstances
+    ,ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
--- I can't figure out an acceptable type for 'set' and similar
+-- I can't figure out an acceptable type for 'set' and similar:
+-- ghc doesn't accept the type inferred by ghci
 
 {- |
 
@@ -29,7 +31,7 @@ Portability :  unportable
 Import "XMonad.Config.Alt".
 -}
 module XMonad.Config.Alt.Internal (
-    -- module XMonad.Config.Alt.Internal,
+    module XMonad.Config.Alt.QQ,
 
     -- * Running
     runConfig,
@@ -93,17 +95,18 @@ module XMonad.Config.Alt.Internal (
     Config(..),
 
     test,
+
+    module Data.HList,
  ) where
 
 import Control.Monad.Writer
 import Data.Char
 import Data.HList
-import Data.HList.FakePrelude
 import Language.Haskell.TH
 
 import qualified XMonad as X
 import XMonad.Config.Alt.Types
-
+import XMonad.Config.Alt.QQ
 
 -- * Class to write set / modify as functions
 class Mode action field e x y | action field e x -> y, action field x y -> e where
@@ -115,7 +118,7 @@ data Set = Set
 data Modify = Modify
 data ModifyIO = ModifyIO
 
-defaultPrec = hSucc (hSucc (hSucc (hSucc hZero)))
+$(decNat "defaultPrec" 4)
 
 {- $actions
 
@@ -302,6 +305,14 @@ data HHMap a = HHMap a
 instance HMap f a b => Apply (HHMap f) a b where
     apply (HHMap f) = hMap f
 
+{- | Verification that insertions happen in order
+
+> (T1 (),"3")
+> (T2 (T1 ()),"31")
+> (T2 (T3 (T1 ())),"321")
+> (T2 (T3a (T3 (T1 ()))),"3221")
+
+-}
 test :: IO ()
 test = sequence_ $ hMapM Print $ hMap RunMWR $ hMap (HHMap Snd) $ hEnd $ hBuild
     test1_
@@ -349,10 +360,12 @@ to run the config.
 
 -}
 
+-- | Improve error messages maybe.
 data Expected a
 
 $(fmap concat $ sequence
    [ do
+        -- do better by using quoted names in the first place?
      let accessor = "X." ++ (case nameBase d of
                                 x:xs -> toLower x:xs
                                 _ -> [])
@@ -380,8 +393,11 @@ $(fmap concat $ sequence
           `const` act              -- suppress unused var warning
 
      sequence $
+
       [fallback (conT n) | n <- [''ModifyIO, ''Modify, ''Set] ] ++
+
       [dataD (return []) d [] [normalC d []] []
+
       ,mkId ''ModifyIO [t| $ty -> Config $ty |]
                         [| \f c -> do
                                 r <- f ($(varE acc) c)
@@ -389,6 +405,7 @@ $(fmap concat $ sequence
                                             [| c |]
                                             [fmap (\r' -> (acc,r')) [| r |]])
                                 |]
+
       ,mkId ''Modify   [t| $ty -> $ty |]
                         [| \f c -> do
                                 r <- return $ f ($(varE acc) c)
@@ -396,6 +413,7 @@ $(fmap concat $ sequence
                                             [| c |]
                                             [fmap (\r' -> (acc,r')) [| r |]])
                                 |]
+
       ,mkId ''Set      [t| $ty |]
                         [| \f c -> do
                                 return $(recUpdE
@@ -403,6 +421,7 @@ $(fmap concat $ sequence
                                             [fmap ((,) acc) [| f |]])
                                 |]
       ]
+
     | d <- map mkName
            -- fields in XConf
            -- XXX make these ' versions so we can be hygenic
