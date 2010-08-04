@@ -16,6 +16,8 @@ Adapts functionality from some contrib modules
 module XMonad.Config.Alt.Desktop (
 
   -- * "XMonad.Hooks.DynamicLog"
+  dzen,
+  xmobar,
   statusBar,
 
   -- * "XMonad.Hooks.EwmhDesktops"
@@ -53,5 +55,20 @@ statusBar cmd pp k = avoidStruts . ins' statusBarPrec hTrue
                                c'' <- liftIO $ DynamicLog.statusBar cmd pp k c'
                                return $ c'' { X.layoutHook = X.layoutHook c' }
                            )
+toggleStrutsKey c = (X.modMask c, X.xK_b)
                                                                    
+xmobar conf = statusBar
+              "xmobar" 
+              DynamicLog.xmobarPP 
+              toggleStrutsKey 
+              conf
                                                        
+dzen conf = statusBar
+              ("dzen2" ++ flags)
+              DynamicLog.xmobarPP 
+              toggleStrutsKey 
+              conf
+ where
+    fg      = "'#a8a3f7'" -- n.b quoting
+    bg      = "'#3f3c6d'"
+    flags   = "-e 'onstart=lower' -w 400 -ta l -fg " ++ fg ++ " -bg " ++ bg
