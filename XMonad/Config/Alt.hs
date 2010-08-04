@@ -10,6 +10,17 @@ Portability :  unportable
 
 Alternative, more composable config.
 
+This means the config can be assembled using pieces that encode:
+
+ * correct composition when config options don't commute: @a (b conf)@ works, but @b (a (conf)@ is nonsense (ex. respecting layout hints and other layout modifiers).
+
+ * features that must be enabled once-only
+
+ * bundling multiple features in a single function: 'Config' captures IO
+
+ * collect warnings (nothing uses this feature yet)
+
+
 For examples, refer to sources:
 
  * "XMonad.Config.Alt.Sample"

@@ -1,6 +1,31 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-module XMonad.Config.Alt.Desktop where
+
+{- |
+Module      :  XMonad.Config.Alt.Desktop
+Copyright   :  Adam Vogt <vogt.adam@gmail.com>
+License     :  BSD3-style (see LICENSE)
+
+Maintainer  :  Adam Vogt <vogt.adam@gmail.com>
+Stability   :  unstable
+Portability :  unportable
+
+Adapts functionality from some contrib modules
+
+-}
+module XMonad.Config.Alt.Desktop (
+
+  -- * "XMonad.Hooks.DynamicLog"
+  statusBar,
+
+  -- * "XMonad.Hooks.EwmhDesktops"
+  ewmh,
+
+  -- * "XMonad.Hooks.ManageDocks"
+  avoidStrutsOn,
+  avoidStruts,
+
+  ) where
 
 import qualified XMonad as X
 import qualified XMonad.Hooks.EwmhDesktops as E
