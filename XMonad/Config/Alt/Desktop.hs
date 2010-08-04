@@ -38,9 +38,9 @@ import Control.Monad.Trans
 
 $(decNat "avoidStrutsPrec" 1)
 $(decNat "statusBarPrec" 2)
-$(decNat "ewmhPrec" 2)
+$(decNat "ewmhPrec" 6)
 
-ewmh c = ins' ewmhPrec hTrue LayoutHook (liftM E.ewmh) c
+ewmh c = ins' ewmhPrec hTrue (liftM E.ewmh) c
 
 avoidStrutsOn a = ins' avoidStrutsPrec hTrue
                   (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) =<<)
