@@ -40,21 +40,29 @@ $(decNat "avoidStrutsPrec" 1)
 $(decNat "statusBarPrec" 2)
 $(decNat "ewmhPrec" 6)
 
+-- | See 'E.ewmh'
 ewmh c = ins' ewmhPrec hTrue (liftM E.ewmh) c
 
-avoidStrutsOn a = ins' avoidStrutsPrec hTrue
+-- | See 'ManageDocks.avoidStrutsOn'
+avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
                   (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) =<<)
+                  c
 
-avoidStruts a = ins' avoidStrutsPrec hTrue
+
+-- | See 'ManageDocks.avoidStruts'
+avoidStruts c = ins' avoidStrutsPrec hTrue
               (m Modify LayoutHook ManageDocks.avoidStruts =<<)
-              a
+              c
 
-statusBar cmd pp k = avoidStruts . ins' statusBarPrec hTrue 
+-- | See 'DynamicLog.statusBar'
+statusBar cmd pp k conf = avoidStruts . ins' statusBarPrec hTrue 
                            (\c -> do
                                c' <- c
                                c'' <- liftIO $ DynamicLog.statusBar cmd pp k c'
                                return $ c'' { X.layoutHook = X.layoutHook c' }
                            )
+                         $ conf
+
 toggleStrutsKey c = (X.modMask c, X.xK_b)
                                                                    
 xmobar conf = statusBar
