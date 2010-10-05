@@ -53,16 +53,16 @@ library
         ghc-options:    --disable-optimizations
 
     if flag(with_parsec) && flag(with_split)
-        build-depends: parsec, split
+        build-depends: parsec >= 2 && < 4, split >= 0.1 && < 0.2
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        build-depends: hint, network
+        build-depends: hint >= 0.3 && < 0.4, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd >= 0.4 && <0.5
+        build-depends: libmpd >= 0.5 && < 0.6
         exposed-modules: XMonad.Prompt.MPD
 
     if impl(ghc >= 6.12.1) && flag(with_template_haskell) && flag(with_hlist)
