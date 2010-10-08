@@ -31,7 +31,6 @@ import Data.Maybe
 import Network.MPD
 import XMonad
 import XMonad.Prompt
-import XMonad.Prompt.Input
 import Data.List (nub,isPrefixOf,findIndex)
 
 -- $usage
@@ -59,6 +58,15 @@ import Data.List (nub,isPrefixOf,findIndex)
 -- applied withMPDEx).
 type RunMPD = forall a . MPD a -> IO (Response a)
 
+-- | A new prompt type since Prompt.Input causes problems when completing
+-- strings with spaces in them
+data MPDPrompt = MPDPrompt String
+
+instance XPrompt MPDPrompt where
+    showXPrompt (MPDPrompt s) = s ++ ": "
+    nextCompletion = const getNextCompletion
+    commandToComplete = const id
+
 -- | Extracts the given metadata attribute from a Song
 extractMetadata :: Metadata -> Song -> String
 extractMetadata meta = fromMaybe "Unknown" . join . fmap listToMaybe .
@@ -71,10 +79,14 @@ mkComplLst lst s = return . filter isPrefix' $ lst
 
 -- | Helper function for 'findMatching'
 findMatching' :: XPConfig -> [Song] -> Metadata -> X [Song]
+findMatching' _ [] _ = return []
 findMatching' xp songs meta = do
-  Just input <- inputPromptWithCompl xp "MPD"
-                (mkComplLst . nub . map (extractMetadata meta) $ songs)
-  return $ filter ((==input) . extractMetadata meta) songs
+  answer <- mkXPromptWithReturn (MPDPrompt (show meta)) xp
+           (mkComplLst . nub . map (extractMetadata meta) $ songs)
+           return
+  case answer of
+    Just input -> return $ filter ((==input) . extractMetadata meta) songs
+    Nothing -> return []
 
 -- | Lets the user filter out non-matching with a prompt by supplied criteria.
 findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
@@ -101,4 +113,4 @@ addMatching runMPD xp metas = do
 -- | Add matching songs and play the first one.
 addAndPlay :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlay runMPD xp ms = addMatching runMPD xp ms >>=
-                          io . runMPD . play . Just . head >> return ()
+                          io . runMPD . play . listToMaybe >> return ()
