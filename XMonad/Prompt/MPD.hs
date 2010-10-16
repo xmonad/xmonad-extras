@@ -43,7 +43,7 @@ import Data.List (nub,isPrefixOf,findIndex)
 -- You can then use this in a keybinding, to filter first by artist, then by
 -- album and add the matching songs:
 --
--- > addMatching MPD.withMPD defaultXPConfig [MPD.Artist, MPD.Album >> return ()
+-- > addMatching MPD.withMPD defaultXPConfig [MPD.Artist, MPD.Album] >> return ()
 --
 -- That way you will first be asked for an artist name, then for an album by
 -- that artist etc..
