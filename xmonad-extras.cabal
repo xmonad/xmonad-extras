@@ -41,7 +41,7 @@ library
     else
         build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <1.0, xmonad-contrib>=0.9 && <1.0
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <0.10, xmonad-contrib>=0.9 && <0.10
 
     if true
         ghc-options:        -fwarn-tabs -Wall
