@@ -88,7 +88,10 @@ findMatching' xp songs meta = do
     Just input -> return $ filter ((==input) . extractMetadata meta) songs
     Nothing -> return []
 
--- | Lets the user filter out non-matching with a prompt by supplied criteria.
+-- | Lets the user filter out non-matching songs. For example, if given
+-- [Artist, Album] as third argument, this will prompt the user for an
+-- artist(with tab-completion), then for an album by that artist and then
+-- returns the songs from that album.
 findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
 findMatching runMPD xp metas = do
   resp <- io . runMPD . listAllInfo $ ""
