@@ -75,6 +75,8 @@ library
                          XMonad.Config.Alt.Internal
                          XMonad.Config.Alt.QQ
 
+        other-modules:   XMonad.Config.Alt.Types
+
     exposed-modules: XMonad.Hooks.PerWindowKbdLayout
 
     if impl(ghc >= 6.12.1)
