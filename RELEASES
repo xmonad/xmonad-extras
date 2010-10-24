@@ -1,0 +1,29 @@
+0.9.2
+
+Address hackage build failure.
+
+
+0.9.1
+
+This is mainly a compatability release, because I forgot to add upper
+version bounds on the dependencies in the previous release, which
+caused a build failure due to a new version of the libmpd-bindings.
+
+This version also adds XMonad.Config.Alt by Adam Vogt, a new,
+experimental approach to configuring xmonad that is intended to make
+the configuration simpler, more modular and to address difficulties
+that arise when enabling multiple extensions.
+
+
+0.9
+
+The xmonad-extras package which contains some additional functionality
+that requires additional dependencies is now on Hackage:
+
+http://hackage.haskell.org/package/xmonad-extras-0.9
+
+It includes a prompt for MPD, volume control and a way to evaluate
+Haskell expression at runtime, similar to Emacs' eval feature.
+
+If anyone has some modules or ideas that can't go in contrib due to
+dependencies, patches and/or suggestions are always welcome.
