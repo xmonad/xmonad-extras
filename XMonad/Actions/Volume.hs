@@ -177,19 +177,19 @@ amixerSet    :: Double -> Bool ->  String  -> IO String
 amixerGetAll :: [String] -> IO (Double, Bool)
 amixerGet    ::  String  -> IO String
 amixerSetAll    = (mapM_ .) . amixerSet
-amixerSet v m s = outputOf $ "amixer set '" ++ s ++ "' " ++ show (clip v) ++ "% " ++ (if m then "" else "un") ++ "mute"
+amixerSet v m s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ show (clip v) ++ "% " ++ (if m then "" else "un") ++ "mute"
 amixerGetAll    = fmap parseAmixerGetAll . mapM amixerGet
 amixerGet     s = outputOf $ "amixer get \'" ++ s ++ "\'"
 
 amixerSetVolumeOnlyAll :: Double -> [String] -> IO ()
 amixerSetVolumeOnly    :: Double ->  String  -> IO String
 amixerSetVolumeOnlyAll  = mapM_ . amixerSetVolumeOnly
-amixerSetVolumeOnly v s = outputOf $ "amixer set '" ++ s ++ "' " ++ show (clip v) ++ "% "
+amixerSetVolumeOnly v s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ show (clip v) ++ "%"
 
 amixerSetMuteOnlyAll :: Bool -> [String] -> IO ()
 amixerSetMuteOnly    :: Bool ->  String  -> IO String
 amixerSetMuteOnlyAll  = mapM_ . amixerSetMuteOnly
-amixerSetMuteOnly m s = outputOf $ "amixer set '" ++ s ++ "' " ++ (if m then "" else "un") ++ "mute"
+amixerSetMuteOnly m s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ (if m then "" else "un") ++ "mute"
 
 parseAmixerGetAll :: [String] -> (Double, Bool)
 parseAmixerGetAll ss = (geomMean vols, mute) where
