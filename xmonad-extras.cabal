@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.9.2
+version:            0.10
 homepage:           http://projects.haskell.org/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -43,7 +43,7 @@ library
     else
         build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.9 && <0.10, xmonad-contrib>=0.9 && <0.10
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.10 && <0.11, xmonad-contrib>=0.10 && <0.11
 
     if true
         ghc-options:        -fwarn-tabs -Wall
@@ -77,7 +77,7 @@ library
 
         other-modules:   XMonad.Config.Alt.Types
 
---     exposed-modules: XMonad.Hooks.PerWindowKbdLayout
+        exposed-modules: XMonad.Hooks.PerWindowKbdLayout
 
     if impl(ghc >= 6.12.1)
         ghc-options:    -fno-warn-unused-do-bind
