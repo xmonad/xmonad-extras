@@ -14,7 +14,8 @@
     ,TypeSynonymInstances
     ,UndecidableInstances
     ,ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures
+    -fcontext-stack=81 #-}
 -- I can't figure out an acceptable type for 'set' and similar:
 -- ghc doesn't accept the type inferred by ghci
 
