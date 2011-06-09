@@ -9,7 +9,7 @@
 -- Stability   :  unstable
 -- Portability :  unportable
 --
--- Similar to XMonad.Util.WindowProperties, but uses regular expressions matching
+-- Similar to XMonad.Util.WindowProperties, but uses posix regular expressions matching
 -- instead of exact match.
 --
 -----------------------------------------------------------------------------
