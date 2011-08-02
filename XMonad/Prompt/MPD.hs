@@ -26,6 +26,7 @@ module XMonad.Prompt.MPD (-- * Usage
                          )  where
 import Control.Monad
 import Data.Char
+import Data.Either
 import qualified Data.Map as M
 import Data.Maybe
 import Network.MPD
@@ -98,7 +99,7 @@ findMatching runMPD xp metas = do
   case resp of
     Left err -> trace ("XMonad.Prompt.MPD: MPD returned an error: " ++ show err)
                 >> return []
-    Right songs -> foldM (findMatching' xp) songs metas
+    Right songs -> foldM (findMatching' xp) (rights songs) metas
 
 -- | Determine playlist position of the song and add it, if it isn't present.
 findOrAdd :: Song -> MPD Int
