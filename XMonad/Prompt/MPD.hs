@@ -32,7 +32,7 @@ import Data.Maybe
 import Network.MPD
 import XMonad
 import XMonad.Prompt
-import Data.List (nub,isPrefixOf,findIndex)
+import Data.List as L (nub,isPrefixOf,find)
 
 -- $usage
 --
@@ -104,9 +104,9 @@ findMatching runMPD xp metas = do
 -- | Determine playlist position of the song and add it, if it isn't present.
 findOrAdd :: Song -> MPD Int
 findOrAdd s = playlistInfo Nothing >>= \pl ->
-  case findIndex ((== sgFilePath s) . sgFilePath) pl of
-    Just i -> return . fromIntegral $ i
-    Nothing -> flip addId Nothing . sgFilePath $ s
+  case L.find ((== sgFilePath s) . sgFilePath) pl of
+    Just (Song { sgIndex = Just i }) -> return i
+    _ -> flip addId Nothing . sgFilePath $ s
 
 -- | Add all selected songs to the playlist if they are not in it.
 addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
