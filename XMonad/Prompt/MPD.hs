@@ -33,6 +33,7 @@ import Network.MPD
 import XMonad
 import XMonad.Prompt
 import Data.List as L (nub,isPrefixOf,find)
+import qualified XMonad.Prompt.MPD.Compat as Compat
 
 -- $usage
 --
@@ -106,7 +107,7 @@ findOrAdd :: Song -> MPD Int
 findOrAdd s = playlistInfo Nothing >>= \pl ->
   case L.find ((== sgFilePath s) . sgFilePath) pl of
     Just (Song { sgIndex = Just i }) -> return i
-    _ -> flip addId Nothing . sgFilePath $ s
+    _ -> fmap Compat.unwrapId . flip addId Nothing . sgFilePath $ s
 
 -- | Add all selected songs to the playlist if they are not in it.
 addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
@@ -118,4 +119,4 @@ addMatching runMPD xp metas = do
 addAndPlay :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlay runMPD xp ms = do
   ids <- addMatching runMPD xp ms
-  whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId)
+  whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId . Compat.wrapId)
