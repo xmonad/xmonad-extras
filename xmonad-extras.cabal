@@ -72,6 +72,7 @@ library
     if flag(with_mpd)
         build-depends: libmpd >= 0.6 && < 0.8
         exposed-modules: XMonad.Prompt.MPD
+        other-modules: XMonad.Prompt.MPD.Compat
 
     if flag(with_regex_posix)
         build-depends: regex-posix
