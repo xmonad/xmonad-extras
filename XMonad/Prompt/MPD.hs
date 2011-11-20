@@ -116,5 +116,6 @@ addMatching runMPD xp metas = do
 
 -- | Add matching songs and play the first one.
 addAndPlay :: RunMPD -> XPConfig -> [Metadata] -> X ()
-addAndPlay runMPD xp ms = addMatching runMPD xp ms >>=
-                          io . runMPD . play . listToMaybe >> return ()
+addAndPlay runMPD xp ms = do
+  ids <- addMatching runMPD xp ms
+  whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId)
