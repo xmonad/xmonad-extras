@@ -61,9 +61,6 @@ library
         build-depends: parsec >= 2 && < 4, split >= 0.1 && < 0.2
         exposed-modules: XMonad.Actions.Volume
 
-    -- At the moment of writing, hint does not yet support
-    -- GHCs newer than 7.0.4; If that changes and no new release
-    -- of xmonad-extras has been made, please contact the maintainer.
     if flag(with_hint)
         if impl(ghc < 7.2)
                 build-depends: hint >= 0.3 && < 0.4, network
