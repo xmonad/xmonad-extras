@@ -29,6 +29,7 @@ flag with_mpd
 
 flag with_hlist
   description: Build modules depending on HList.
+  default: False
 
 flag with_regex_posix
   description: Build modules depending on posix-regex.
