@@ -71,7 +71,7 @@ library
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd == 0.8.*
+        build-depends: libmpd == 0.8.*, bytestring == 0.9.*
         exposed-modules: XMonad.Prompt.MPD
 
     if flag(with_regex_posix)
