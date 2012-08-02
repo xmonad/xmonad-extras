@@ -25,15 +25,14 @@ module XMonad.Prompt.MPD (-- * Usage
                          ,findOrAdd
                          )  where
 import Control.Monad
+import qualified Data.ByteString as B
 import Data.Char
-import Data.Either
 import qualified Data.Map as M
 import Data.Maybe
 import Network.MPD
 import XMonad
 import XMonad.Prompt
 import Data.List as L (nub,isPrefixOf,find)
-import qualified XMonad.Prompt.MPD.Compat as Compat
 
 -- $usage
 --
@@ -72,7 +71,7 @@ instance XPrompt MPDPrompt where
 -- | Extracts the given metadata attribute from a Song
 extractMetadata :: Metadata -> Song -> String
 extractMetadata meta = fromMaybe "Unknown" . join . fmap listToMaybe .
-                       M.lookup meta . sgTags
+                       M.lookup meta . M.map (map toString) . sgTags
 
 -- | Creates a case-insensitive completion function from a list.
 mkComplLst :: [String] -> String -> IO [String]
@@ -90,24 +89,30 @@ findMatching' xp songs meta = do
     Just input -> return $ filter ((==input) . extractMetadata meta) songs
     Nothing -> return []
 
+extractSongs :: [LsResult] -> [Song]
+extractSongs = mapMaybe extractSong
+    where extractSong (LsSong s) = Just s
+          extractSong _ = Nothing
+
 -- | Lets the user filter out non-matching songs. For example, if given
 -- [Artist, Album] as third argument, this will prompt the user for an
 -- artist(with tab-completion), then for an album by that artist and then
 -- returns the songs from that album.
 findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
 findMatching runMPD xp metas = do
-  resp <- io . runMPD . listAllInfo $ ""
+  resp <- io . runMPD . fmap extractSongs . listAllInfo $ Path B.empty
   case resp of
     Left err -> trace ("XMonad.Prompt.MPD: MPD returned an error: " ++ show err)
                 >> return []
-    Right songs -> foldM (findMatching' xp) (rights songs) metas
+    Right songs -> foldM (findMatching' xp) songs metas
 
 -- | Determine playlist position of the song and add it, if it isn't present.
 findOrAdd :: Song -> MPD Int
 findOrAdd s = playlistInfo Nothing >>= \pl ->
   case L.find ((== sgFilePath s) . sgFilePath) pl of
     Just (Song { sgIndex = Just i }) -> return i
-    _ -> fmap Compat.unwrapId . flip addId Nothing . sgFilePath $ s
+    _ -> fmap unwrapId . flip addId Nothing . sgFilePath $ s
+  where unwrapId (Id i) = i
 
 -- | Add all selected songs to the playlist if they are not in it.
 addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
@@ -119,4 +124,4 @@ addMatching runMPD xp metas = do
 addAndPlay :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlay runMPD xp ms = do
   ids <- addMatching runMPD xp ms
-  whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId . Compat.wrapId)
+  whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId . Id)
