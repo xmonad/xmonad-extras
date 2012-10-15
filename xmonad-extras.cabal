@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.10.1.1
+version:            0.10.1.2
 homepage:           http://projects.haskell.org/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -59,7 +59,7 @@ library
         ghc-options:    --disable-optimizations
 
     if flag(with_parsec) && flag(with_split)
-        build-depends: parsec >= 2 && < 4, split >= 0.1 && < 0.2
+        build-depends: parsec >= 2 && < 4, split >= 0.1 && < 0.3
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
@@ -71,7 +71,7 @@ library
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd == 0.8.*, bytestring == 0.9.*
+        build-depends: libmpd == 0.8.*, bytestring >= 0.9 && < 0.11
         exposed-modules: XMonad.Prompt.MPD
 
     if flag(with_regex_posix)
