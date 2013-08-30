@@ -1,3 +1,8 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE
     OverlappingInstances
     ,EmptyDataDecls
@@ -16,8 +21,6 @@
     ,ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures
     -fcontext-stack=81 #-}
--- I can't figure out an acceptable type for 'set' and similar:
--- ghc doesn't accept the type inferred by ghci
 
 {- |
 
@@ -45,11 +48,13 @@ module XMonad.Config.Alt.Internal (
     modify,
     modifyIO,
 
+
     -- ** less useful
-    modifyIO',
+    -- modifyIO',
     insertInto,
 
-    -- * Things to modify
+    -- * Fields
+    -- $fields
     -- ** Special
     LayoutHook(LayoutHook),
 
@@ -81,10 +86,10 @@ module XMonad.Config.Alt.Internal (
 
     -- ** Useful functions
     HCompose(hComp),
-    Snd(Snd),
-    HSubtract(hSubtract),
+    HSnd(HSnd),
+    HSubtract,
     HReplicateF(hReplicateF),
-    HPred'(hPred'),
+    HPred',
 
     -- ** For overloading
     Mode(..),
@@ -95,7 +100,7 @@ module XMonad.Config.Alt.Internal (
 
     Config(..),
 
-    test,
+--     test,
 
     module Data.HList,
  ) where
@@ -138,14 +143,17 @@ For constructing things to modify a config:
  * @v@       the value that is being updated (or a function if you use 'Modify' or similar)
 
 -}
-set f v = insertInto Set hFalse defaultPrec f v
-add f v = insertInto Add hFalse defaultPrec f v
-modify f v = insertInto Modify hFalse defaultPrec f v
-modifyIO = modifyIO' hFalse defaultPrec
 
-modifyIO' x = insertInto ModifyIO x
+set f v      = insertInto defaultPrec hFalse Set      f v
+add f v      = insertInto defaultPrec hFalse Add      f v
+modify f v   = insertInto defaultPrec hFalse Modify   f v
+modifyIO f v = insertInto defaultPrec hFalse ModifyIO f v
 
-insertInto action hold prec f x = ins' prec hold (m action f x =<<)
+insertInto prec hold action field e l = ins' prec hold (m action field e =<<) l
+
+
+
+
 
 -- | Represent setting layouts and layout modifiers
 data LayoutHook = LayoutHook
@@ -158,17 +166,17 @@ instance Mode ModifyIO LayoutHook (l X.Window -> Config (m X.Window)) l m where
 
 -- | 'Add' means something else for 'X.layoutHook' because there's no suitable
 -- mempty for the general instance of 'X.LayoutClass'
-instance (X.LayoutClass l X.Window, X.LayoutClass l' X.Window) =>
-        Mode Add LayoutHook (l' X.Window) l (X.Choose l' l) where
+instance (X.LayoutClass l w, X.LayoutClass l' w, w ~ X.Window) =>
+        Mode Add LayoutHook (l' w) l (X.Choose l' l) where
     m _ _ l = \x -> return $ x { X.layoutHook = l X.||| X.layoutHook x }
 
-instance (Read (l X.Window), X.LayoutClass l X.Window,
-          Read (l' X.Window), X.LayoutClass l' X.Window) =>
-        Mode Modify LayoutHook (l X.Window -> l' X.Window) l l' where
+instance (w ~ X.Window, Read (l w), X.LayoutClass l w,
+          Read (l' w), X.LayoutClass l' w) =>
+        Mode Modify LayoutHook (l w -> l' w) l l' where
     m _ _ l = \x -> return $ x { X.layoutHook = l (X.layoutHook x) }
 
-instance (X.LayoutClass l' X.Window) =>
-        Mode Set LayoutHook (l' X.Window) l l' where
+instance (X.LayoutClass l' w, w ~ X.Window) =>
+        Mode Set LayoutHook (l' w) l l' where
     m _ _ l = \x -> return $ x { X.layoutHook = l }
 
 
@@ -176,57 +184,44 @@ instance (X.LayoutClass l' X.Window) =>
 
 
 
-data Snd = Snd
-instance Apply Snd (a, b) b where
-    apply _ (_, b) = b
+data HSnd = HSnd
+instance ApplyAB HSnd (a, b) b where
+    type ApplyB HSnd (a,b) = Just b
+    type ApplyA HSnd b = Nothing
+    applyAB _ (_, b) = b
 
-
--- | like  @foldr (.) id@, but for a heteregenous list.
-class HCompose l f | l -> f where
-    hComp :: l -> f
-
-instance HCompose HNil (a -> a) where
-    hComp _ = id
-
-instance HCompose r (a -> b) => HCompose ((b -> c) :*: r) (a -> c) where
-    hComp (HCons g r) = g . hComp r
-
+data Id = Id
+instance (x~y) => ApplyAB Id x y where
+    type ApplyA Id x = Just x
+    type ApplyB Id x = Just x
+    applyAB _ x = x
 
 
 -- | The difference between HNats. Clamped to HZero
-class HSubtract a b c | a b -> c where
-    hSubtract :: a -> b -> c
+type family HSubtract (a :: HNat) (b :: HNat) :: HNat
+type instance HSubtract (HSucc a) (HSucc b) = HSubtract a b
+type instance HSubtract a HZero = a
+type instance HSubtract HZero b = HZero
 
-instance (HNat a, HNat b, HSubtract a b c) => HSubtract (HSucc a) (HSucc b) c where
-    hSubtract a b = hSubtract (hPred a) (hPred b)
-
-instance HNat a => HSubtract a HZero a where
-    hSubtract a _ = a
-
-instance HSubtract HZero b HZero where
-    hSubtract _ _ = hZero
+hSubtract :: Proxy a -> Proxy b -> Proxy (HSubtract a b)
+hSubtract _ _ = undefined
 
 
-class HNat n => HReplicateF n e l | n e -> l where
-    hReplicateF :: n -> e -> l
+class HReplicateF (n::HNat) e l | n e -> l where
+    hReplicateF :: Proxy n -> e -> HList l
 
-instance HReplicateF HZero e HNil where
+instance HReplicateF HZero e '[] where
     hReplicateF _ _ = HNil
 
-instance (Apply e x y, HReplicateF n e r) => HReplicateF (HSucc n) e ((HFalse, x -> y) :*: r) where
-    hReplicateF n e = (hFalse, apply e) `HCons` hReplicateF (hPred n) e
-
+instance (App e x y, HReplicateF n e r) => HReplicateF (HSucc n) e ((Proxy False, x -> y) ': r) where
+    hReplicateF n e = (hFalse, app e) `HCons` hReplicateF (hPred n) e
 
 
 -- | exactly like hPred, but accept HZero too
-class HPred' n n' | n -> n' where
-    hPred' :: n -> n'
+type family HPred' (n :: HNat) :: HNat
+type instance HPred' (HSucc n) = n
+type instance HPred' HZero = HZero
 
-instance HPred' HZero HZero where
-    hPred' _ = hZero
-
-instance HNat n => HPred' (HSucc n) n where
-    hPred' = hPred
 
 insLt n hold f l =
     l
@@ -242,36 +237,31 @@ insGeq n a f l =
 
 -- | utility class, so that we can use contexts that may not be satisfied,
 -- depending on the length of the accumulated list.
-class (HBool hold) => Ins2 b n hold f l l' | b n hold f l -> l' where
-    ins2 :: b -> n -> hold -> f -> l -> l'
+class Ins2 (b :: Bool) (n :: HNat) (hold :: Bool) f l l' | b n hold f l -> l',b n hold f l' -> l, b hold l l' -> f  where
+    ins2 :: Proxy b -> Proxy n -> Proxy hold -> f -> HList l -> HList l'
 
 -- | when l needs to be padded with id
-instance
-     (-- HPred' a n',
-      HLength l n,
-      HSubtract a1 n a,
-      -- HReplicateF n' Id l',
-      HReplicateF a Id l',
-      HAppend l l' l'',
-      HAppend l'' (HCons (hold,e) HNil) l''1,
-      HBool hold) =>
-  Ins2 HTrue a1 hold e l l''1
+instance (HReplicateF (HSubtract n (HLength l1)) Id l,
+          HAppendList (HAppendList l1 l) '[(Proxy hold,t1)] ~ l2) =>
+     Ins2 True n hold t1 l1 l2
  where ins2 _ = insLt
 
 -- | when l already has enough elements, just compose. Only when the existing HBool is HFalse
-instance
-     (HLookupByHNat n l (t, a -> b),
-      HUpdateAtHNat n z l l',
-      HCond t (t, a -> b) (t1, a -> c) z,
-      HBool t1) =>
-  Ins2 HFalse n t1 (b -> c) l l'
+instance (HUpdateAtHNat n e l, HLookupByHNat n l,
+      HCond t (Proxy t, a -> b) (Proxy t1, a -> c) e,
+      HLookupByHNatR n l ~ (Proxy t, a -> b),
+      HUpdateAtHNatR n e l ~ l',
+      bc ~ (b -> c)) =>
+     Ins2 False n t1 bc l l'
  where ins2 _ = insGeq
 
-class Ins' n hold f l l' | n hold f l -> l' where
-    ins' :: n -> hold -> f -> l -> l'
+class Ins' (n :: HNat) (hold :: Bool) f l l' | n hold f l -> l' where
+    ins' :: Proxy n -> Proxy hold -> f -> HList l -> HList l'
 
-instance (HLength l ll, HLt ll n b,  Ins2 b n hold f l l') => Ins' n hold f l l' where
-    ins' = ins2 (undefined :: b)
+instance ( HLt (HLength l) n ~ b,  Ins2 (HLt (HLength l) n) n hold f l l') => Ins' n hold f l l' where
+    ins' = ins2 (undefined :: Proxy b)
+
+-- ins' prec hold f l = ins2 ( hLt (hLength l) prec ) prec hold f l
 
 {- | @ins n f xs@ inserts at index @n@ the function f, or extends the list @xs@
 with 'id' if there are too few elements. This way the precedence is not
@@ -279,13 +269,35 @@ bounded.
 -}
 ins n e = ins' n hFalse (e =<<)
 
+{- | like  @foldr (.) id@, but for a heteregenous list. This does the other
+ order than hComposeList (which is weaker at type inference it seems, since
+ the type of the id is needed to find the result...
+
+ >>> hComposeList  ((+1) .*. (*2) .*. HNil) 2
+ 6
+
+ >>> hComp ((+1) .*. (*2) .*. HNil) 2
+ 5
+-}
+class HCompose l f | l -> f where
+    hComp :: HList l -> f
+
+instance (a ~ a') => HCompose '[] (a -> a') where
+    hComp _ = id
+
+instance HCompose r (a -> b) => HCompose ((b -> c) ': r) (a -> c) where
+    hComp (HCons g r) = g . hComp r
+
+
 runConfig' defConfig x = do
-    let Config c = hComp (hMap Snd (hComp (hEnd x) HNil)) (return defConfig)
+    let Config c = hComp
+            (applyA' (HMap HSnd) (hComp (hEnd x) HNil))
+            ((return :: a -> Config a) defConfig)
+
     (a,w) <- runWriterT c
     print (w [])
     return a
 
---runConfig :: (X.LayoutClass l X.Window, Read (l X.Window)) => Config (X.XConfig l) -> IO ()
 runConfig x = X.xmonad =<< runConfig' X.defaultConfig x
 
 -- * Tests
@@ -296,15 +308,16 @@ data T3 a = T3 a deriving Show
 data T3a a = T3a a deriving Show
 
 data RunMWR = RunMWR
-instance (Monad m, HCompose l (m () -> Writer w a)) => Apply RunMWR l (a, w) where
-    apply _ x = runWriter $ hComp x (return ())
-data Print = Print
-instance Show a => Apply Print a (IO ()) where
-    apply _ = print
+instance (Monad m, HCompose l (m () -> Writer w a)) => ApplyAB RunMWR (HList l) (a, w) where
+    -- type ApplyB RunMWR (HList l) = Just ... fundeps and AT's don't really mix
+    -- type ApplyA RunMWR (a,w ) = Nothing
+    applyAB _ x = runWriter $ hComp x (return ())
 
+{- should be able to app (HMap (HMap f))
 data HHMap a = HHMap a
 instance HMap f a b => Apply (HHMap f) a b where
     apply (HHMap f) = hMap f
+-}
 
 {- | Verification that insertions happen in order
 
@@ -313,21 +326,21 @@ instance HMap f a b => Apply (HHMap f) a b where
 > (T2 (T3 (T1 ())),"321")
 > (T2 (T3a (T3 (T1 ()))),"3221")
 
--}
+-- broken. Fixing probably involves nasty type signatures like for set get modify etc.
 test :: IO ()
-test = sequence_ $ hMapM Print $ hMap RunMWR $ hMap (HHMap Snd) $ hEnd $ hBuild
+test = sequence_ $ hMapM (HPrint `HComp` RunMWR) $ applyA' (HMap (HMap HSnd)) $ hEnd $ hBuild
     test1_
     test2_
     test3_
     test3a_
-  where
-    test1_ = ins (undefined `asTypeOf` hSucc (hSucc (hSucc hZero))) (\x -> tell "3" >> return (T1 x)) hNil
+ where
+    test1_ = ins (undefined `asTypeOf` hSucc (hSucc (hSucc hZero))) (\x -> tell "3" >> return (T1 x)) HNil
     test2_ = ins (hSucc hZero) (\x -> tell "1" >> return (T2 x)) test1_
     test3_ = ins (hSucc (hSucc hZero)) (\x -> tell "2" >> return (T3 x)) test2_
     test3a_ = ins (hSucc (hSucc hZero)) (\x -> tell "2" >> return (T3a x)) test3_
+-}
 
-
-{- Generated instances for monomorphic fields in 'X.XConfig'
+{- $fields Generated instances for monomorphic fields in 'X.XConfig'
 
 Follows the style of:
 

@@ -1,3 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
@@ -45,8 +50,10 @@ ewmh c = ins' ewmhPrec hTrue (liftM E.ewmh) c
 
 -- | See 'ManageDocks.avoidStrutsOn'
 avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
-                  (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) =<<)
+                  ( liftM (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) ))
                   c
+
+
 
 
 -- | See 'ManageDocks.avoidStruts'
@@ -55,14 +62,15 @@ avoidStruts c = ins' avoidStrutsPrec hTrue
               c
 
 -- | See 'DynamicLog.statusBar'
-statusBar cmd pp k conf = avoidStruts . ins' statusBarPrec hTrue 
+-- doesn't set struts
+statusBar cmd pp k conf = {- avoidStruts .  -- doesn't typecheck -}
+    ins' statusBarPrec hTrue 
                            (\c -> do
                                c' <- c
                                c'' <- liftIO $ DynamicLog.statusBar cmd pp k c'
                                return $ c'' { X.layoutHook = X.layoutHook c' }
                            )
                          $ conf
-
 toggleStrutsKey c = (X.modMask c, X.xK_b)
                                                                    
 xmobar conf = statusBar
@@ -80,3 +88,4 @@ dzen conf = statusBar
     fg      = "'#a8a3f7'" -- n.b quoting
     bg      = "'#3f3c6d'"
     flags   = "-e 'onstart=lower' -w 400 -ta l -fg " ++ fg ++ " -bg " ++ bg
+

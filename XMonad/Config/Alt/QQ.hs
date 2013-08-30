@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 {- | Shorthand. The following are equivalent:
@@ -8,12 +9,16 @@
 
 > $(nat 2)
 
+This is probably redundant given "GHC.TypeLits". But for now HList
+uses it's own 'HNat'.
+
 -}
 module XMonad.Config.Alt.QQ where
 
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH
-import Data.HList
+import Data.HList.CommonMain
+import Data.Char
 
 
 nat' :: QuasiQuoter
@@ -29,5 +34,11 @@ natTy n = foldr appT [t| HZero |] (replicate n [t| HSucc |])
 decNat :: String -> Int -> Q [Dec]
 decNat t n = do
   d <- valD (varP (mkName t)) (normalB (nat n)) []
-  s <- sigD (mkName t) (natTy n)
-  return [s,d]
+  let ty = [t| Proxy $(natTy n) |]
+  s <- sigD (mkName t) ty
+  abbrev <- tySynD (mkName (headToUpper t)) [] ty
+  return [s,d, abbrev]
+
+headToUpper (x:xs) = toUpper x : xs
+headToUpper [] = []
+
