@@ -93,10 +93,7 @@ module XMonad.Config.Alt.Internal (
 
     -- ** For overloading
     Mode(..),
-    Add(Add),
-    Set(Set),
-    Modify(Modify),
-    ModifyIO(ModifyIO),
+    ModeAction(..),
 
     Config(..),
 
@@ -114,15 +111,24 @@ import qualified XMonad as X
 import XMonad.Config.Alt.Types
 import XMonad.Config.Alt.QQ
 
--- * Class to write set / modify as functions
-class Mode action field e x y | action field e x -> y, action field x y -> e where
-    m :: action -> field -> e -> X.XConfig x -> Config (X.XConfig y)
+{- | Class whose instances are used for 'add' 'set' 'modify' of an 'X.XConfig'@ layout@, which
+can change the layout type. If we had lenses or other straightforward ways to adjust the entries
+of 'X.XConfig', this class might be unnecessary. Without it, you would have to manually write out
+things like:
 
--- * Actions for 'Mode'
-data Add = Add -- ^ the 'Mode' instance combines the old value like  @new `mappend` old@
-data Set = Set
-data Modify = Modify
-data ModifyIO = ModifyIO
+> ins' defaultPrec hFalse (liftM (\c -> c{ layoutHook = avoidStruts (layoutHook c) }))
+
+instead of
+
+> modify LayoutHook avoidStruts
+
+-}
+class Mode (action :: ModeAction) field e x y | action field e x -> y, action field x y -> e where
+    m :: Proxy action -> field -> e -> X.XConfig x -> Config (X.XConfig y)
+
+-- | The data type for the first argument of a 'Mode' instance.
+data ModeAction = Add -- ^  combines the old value like  @new `mappend` old@
+    | Set | Modify | ModifyIO
 
 $(decNat "defaultPrec" 4)
 
@@ -136,7 +142,7 @@ For constructing things to modify a config:
 
  * @action@  is an instance of 'Mode' so you only need to write 'ModifyIO' to describe how to access this field.
 
- * @hold@    is 'HTrue' if you don't want to overwrite a preexisting value at the same @prec@. This is for things that should be applied once-only.
+ * @hold@    is @proxy :: Proxy True@ if you don't want to overwrite a preexisting value at the same @prec@. This is for things that should be applied once-only.
 
  * @field@   used with the 'Mode'
 
@@ -144,10 +150,10 @@ For constructing things to modify a config:
 
 -}
 
-set f v      = insertInto defaultPrec hFalse Set      f v
-add f v      = insertInto defaultPrec hFalse Add      f v
-modify f v   = insertInto defaultPrec hFalse Modify   f v
-modifyIO f v = insertInto defaultPrec hFalse ModifyIO f v
+set f v      = insertInto defaultPrec hFalse (proxy :: Proxy Set)      f v
+add f v      = insertInto defaultPrec hFalse (proxy :: Proxy Add)      f v
+modify f v   = insertInto defaultPrec hFalse (proxy :: Proxy Modify)   f v
+modifyIO f v = insertInto defaultPrec hFalse (proxy :: Proxy ModifyIO) f v
 
 insertInto prec hold action field e l = ins' prec hold (m action field e =<<) l
 
@@ -389,7 +395,7 @@ $(fmap concat $ sequence
 
      let mkId action tyIn body = instanceD
                 (return [])
-                [t| $(conT ''Mode) $(conT action) $(conT d) $(tyIn) $l $l |]
+                [t| $(conT ''Mode) $(promotedT action) $(conT d) $(tyIn) $l $l |]
                 [funD 'm
                     [clause
                         [wildP,wildP]
@@ -408,11 +414,11 @@ $(fmap concat $ sequence
 
      sequence $
 
-      [fallback (conT n) | n <- [''ModifyIO, ''Modify, ''Set] ] ++
+      [fallback (promotedT n) | n <- ['ModifyIO, 'Modify, 'Set] ] ++
 
       [dataD (return []) d [] [normalC d []] []
 
-      ,mkId ''ModifyIO [t| $ty -> Config $ty |]
+      ,mkId 'ModifyIO [t| $ty -> Config $ty |]
                         [| \f c -> do
                                 r <- f ($(varE acc) c)
                                 return $(recUpdE
@@ -420,7 +426,7 @@ $(fmap concat $ sequence
                                             [fmap (\r' -> (acc,r')) [| r |]])
                                 |]
 
-      ,mkId ''Modify   [t| $ty -> $ty |]
+      ,mkId 'Modify   [t| $ty -> $ty |]
                         [| \f c -> do
                                 r <- return $ f ($(varE acc) c)
                                 return $(recUpdE
@@ -428,7 +434,7 @@ $(fmap concat $ sequence
                                             [fmap (\r' -> (acc,r')) [| r |]])
                                 |]
 
-      ,mkId ''Set      [t| $ty |]
+      ,mkId 'Set      [t| $ty |]
                         [| \f c -> do
                                 return $(recUpdE
                                             [| c |]
