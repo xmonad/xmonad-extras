@@ -191,16 +191,11 @@ instance (X.LayoutClass l' w, w ~ X.Window) =>
 
 
 data HSnd = HSnd
-instance ApplyAB HSnd (a, b) b where
-    type ApplyB HSnd (a,b) = Just b
-    type ApplyA HSnd b = Nothing
+instance ab ~ (a,b) => ApplyAB HSnd ab b where
     applyAB _ (_, b) = b
 
 data Id = Id
-instance (x~y) => ApplyAB Id x y where
-    type ApplyA Id x = Just x
-    type ApplyB Id x = Just x
-    applyAB _ x = x
+instance (x~y) => ApplyAB Id x y where applyAB _ x = x
 
 
 -- | The difference between HNats. Clamped to HZero
@@ -219,8 +214,8 @@ class HReplicateF (n::HNat) e l | n e -> l where
 instance HReplicateF HZero e '[] where
     hReplicateF _ _ = HNil
 
-instance (App e x y, HReplicateF n e r) => HReplicateF (HSucc n) e ((Proxy False, x -> y) ': r) where
-    hReplicateF n e = (hFalse, app e) `HCons` hReplicateF (hPred n) e
+instance (ApplyAB e x y, HReplicateF n e r) => HReplicateF (HSucc n) e ((Proxy False, x -> y) ': r) where
+    hReplicateF n e = (hFalse, applyAB e) `HCons` hReplicateF (hPred n) e
 
 
 -- | exactly like hPred, but accept HZero too
@@ -291,22 +286,48 @@ class HCompose l f | l -> f where
 instance (a ~ a') => HCompose '[] (a -> a') where
     hComp _ = id
 
-instance HCompose r (a -> b) => HCompose ((b -> c) ': r) (a -> c) where
+instance ((b -> c) ~ bc,  (a -> c) ~ ac, HCompose r (a -> b)) => HCompose (bc ': r) ac where
     hComp (HCons g r) = g . hComp r
 
 
+
+type RunConfig l l' a t t2 t3 =
+   (X.LayoutClass l a,
+    HMapAux HSnd t2 t3,
+    SameLength t2 t3,
+    SameLength t3 t2,
+
+    HCompose t (HList '[] -> HList t2),
+
+    HCompose t3 (Config (X.XConfig l) -> Config (X.XConfig l'))
+    )
+
+runConfig' :: forall l l' a t t2 t3. RunConfig l l' a t t2 t3
+    => X.XConfig l ->  HList t -> IO (X.XConfig l')
 runConfig' defConfig x = do
     let Config c = hComp
-            (applyA' (HMap HSnd) (hComp (hEnd x) HNil))
-            ((return :: a -> Config a) defConfig)
+            (applyAB (HMap HSnd) (hComp x HNil) :: HList t3)
+            (return defConfig)
 
     (a,w) <- runWriterT c
     print (w [])
     return a
 
-runConfig x = X.xmonad =<< runConfig' X.defaultConfig x
+runConfig :: forall l l' a t t2 t3. (RunConfig l l' a t t2 t3,
+    l ~ (X.Choose X.Tall (X.Choose (X.Mirror X.Tall) X.Full)),
+    Read (l' X.Window), X.LayoutClass l' X.Window)
+    => HList t -> IO ()
+runConfig x = do
+    let Config c = hComp
+            (hMap HSnd (hComp x HNil) :: HList t3)
+            (return X.defaultConfig)
+
+    (a,w) <- runWriterT c
+    print (w [])
+    X.xmonad a
 
 -- * Tests
+{-
 
 data T1 a = T1 a deriving Show
 data T2 a = T2 a deriving Show
@@ -318,6 +339,7 @@ instance (Monad m, HCompose l (m () -> Writer w a)) => ApplyAB RunMWR (HList l) 
     -- type ApplyB RunMWR (HList l) = Just ... fundeps and AT's don't really mix
     -- type ApplyA RunMWR (a,w ) = Nothing
     applyAB _ x = runWriter $ hComp x (return ())
+    -}
 
 {- should be able to app (HMap (HMap f))
 data HHMap a = HHMap a
