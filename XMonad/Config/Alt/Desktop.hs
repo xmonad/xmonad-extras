@@ -50,7 +50,7 @@ ewmh c = ins' ewmhPrec hTrue (liftM E.ewmh) c
 
 -- | See 'ManageDocks.avoidStrutsOn'
 avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
-                  ( liftM (m Modify LayoutHook (ManageDocks.avoidStrutsOn a) ))
+                  ( liftM (m (proxy :: Proxy Modify) LayoutHook (ManageDocks.avoidStrutsOn a) ))
                   c
 
 
@@ -58,7 +58,7 @@ avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
 
 -- | See 'ManageDocks.avoidStruts'
 avoidStruts c = ins' avoidStrutsPrec hTrue
-              (m Modify LayoutHook ManageDocks.avoidStruts =<<)
+              (m (proxy :: Proxy Modify) LayoutHook ManageDocks.avoidStruts =<<)
               c
 
 -- | See 'DynamicLog.statusBar'
