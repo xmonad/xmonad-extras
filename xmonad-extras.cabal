@@ -66,7 +66,7 @@ library
         if impl(ghc < 7.2)
                 build-depends: hint >= 0.3 && < 0.4, network
         else
-                build-depends: hint >= 0.3.3.3 && < 0.4, network
+                build-depends: hint >= 0.3.3.3 && < 0.5, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
