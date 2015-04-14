@@ -19,11 +19,30 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH
 import Data.HList.CommonMain
 import Data.Char
-
+import Text.ParserCombinators.ReadP
 
 nat' :: QuasiQuoter
 nat' = QuasiQuoter { quoteExp = \n -> nat (read n),
-                     quotePat = error "XMonad.Config.Alt.QQ.nat'.quotePat: unimplemented"}
+                     quotePat = error "XMonad.Config.Alt.QQ.nat'.quotePat: unimplemented",
+                     quoteType = \n -> natTy (read n),
+                     quoteDec = \s -> case readP_to_S parseDecNat s of
+                                        [((v,n), "")] -> decNat v n
+                                        _ -> fail ("XMonad.Config.Alt.QQ.nat.quoteDec cannot parse " ++ show s)
+                  }
+
+
+parseDecNat :: ReadP (String, Int)
+parseDecNat = do
+    skipSpaces
+    v <- munch isAlpha
+    skipSpaces
+    char '='
+    skipSpaces
+    n <- munch isNumber
+    skipSpaces
+    eof
+    return (v, read n)
+
 
 nat :: Int -> ExpQ
 nat n = foldr appE [| hZero |] (replicate n [| hSucc |])
