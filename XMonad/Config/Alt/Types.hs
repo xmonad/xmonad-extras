@@ -4,7 +4,7 @@
 module XMonad.Config.Alt.Types where
 import XMonad
 import Control.Monad.Writer
-
+import Control.Applicative
 
 -- TH stage restriction otherwise
 data Mode_ = Add_ | Modify_ | ModifyIO_ | Set_
@@ -12,5 +12,5 @@ data Mode_ = Add_ | Modify_ | ModifyIO_ | Set_
 type Warnings = [String] -> [String]
 
 newtype Config a = Config (WriterT Warnings IO a)
-    deriving (Monad, MonadIO, MonadWriter Warnings)
+    deriving (Monad, Applicative, Functor, MonadIO, MonadWriter Warnings)
 

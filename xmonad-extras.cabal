@@ -78,12 +78,11 @@ library
         build-depends: regex-posix
         exposed-modules: XMonad.Util.WindowPropertiesRE
 
-    if impl(ghc >= 6.12.1) && flag(with_template_haskell) && flag(with_hlist)
-        build-depends: template-haskell, HList >= 0.3 && < 0.4
+    if flag(with_template_haskell) && flag(with_hlist)
+        build-depends: template-haskell, HList >= 0.4 && < 0.5
         exposed-modules: XMonad.Config.Alt
                          XMonad.Config.Alt.Desktop
                          XMonad.Config.Alt.Sample1
-                         XMonad.Config.Alt.Sample2
                          XMonad.Config.Alt.Internal
                          XMonad.Config.Alt.QQ
 

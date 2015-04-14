@@ -1,11 +1,7 @@
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE
-    OverlappingInstances
-    ,EmptyDataDecls
+    EmptyDataDecls
+    ,ConstraintKinds
+    ,DataKinds
     ,FlexibleContexts
     ,FlexibleInstances
     ,FunctionalDependencies
@@ -13,8 +9,10 @@
     ,KindSignatures
     ,MultiParamTypeClasses
     ,NoMonomorphismRestriction
+    ,PolyKinds
     ,ScopedTypeVariables
     ,TemplateHaskell
+    ,TypeFamilies
     ,TypeOperators
     ,TypeSynonymInstances
     ,UndecidableInstances
@@ -30,7 +28,7 @@ License     :  BSD3-style (see LICENSE)
 
 Maintainer  :  Adam Vogt <vogt.adam@gmail.com>
 Stability   :  unstable
-Portability :  unportable
+Portability :  unportable (7.6 <= ghc <= 7.10)
 
 Import "XMonad.Config.Alt".
 -}
@@ -50,7 +48,6 @@ module XMonad.Config.Alt.Internal (
 
 
     -- ** less useful
-    -- modifyIO',
     insertInto,
 
     -- * Fields
@@ -85,10 +82,8 @@ module XMonad.Config.Alt.Internal (
     ins,
 
     -- ** Useful functions
-    HCompose(hComp),
+    HCompose(hComp_), hComp,
     HSnd(HSnd),
-    HSubtract,
-    HReplicateF(hReplicateF),
     HPred',
 
     -- ** For overloading
@@ -123,8 +118,12 @@ instead of
 > modify LayoutHook avoidStruts
 
 -}
-class Mode (action :: ModeAction) field e x y | action field e x -> y, action field x y -> e where
-    m :: Proxy action -> field -> e -> X.XConfig x -> Config (X.XConfig y)
+class Mode (action :: ModeAction) field e x y
+        | action field e x -> y,
+          action field x y -> e
+         --  action field e y -> x
+          where
+    m :: Proxy action -> field x y -> e -> X.XConfig x -> Config (X.XConfig y)
 
 -- | The data type for the first argument of a 'Mode' instance.
 data ModeAction = Add -- ^  combines the old value like  @new `mappend` old@
@@ -150,19 +149,17 @@ For constructing things to modify a config:
 
 -}
 
-set f v      = insertInto defaultPrec hFalse (proxy :: Proxy Set)      f v
-add f v      = insertInto defaultPrec hFalse (proxy :: Proxy Add)      f v
-modify f v   = insertInto defaultPrec hFalse (proxy :: Proxy Modify)   f v
-modifyIO f v = insertInto defaultPrec hFalse (proxy :: Proxy ModifyIO) f v
+set f v      = insertInto defaultPrec hFalse (Proxy :: Proxy Set)      f v
+add f v      = insertInto defaultPrec hFalse (Proxy :: Proxy Add)      f v
+modify f v   = insertInto defaultPrec hFalse (Proxy :: Proxy Modify)   f v
+modifyIO f v = insertInto defaultPrec hFalse (Proxy :: Proxy ModifyIO) f v
 
 insertInto prec hold action field e l = ins' prec hold (m action field e =<<) l
 
 
 
-
-
 -- | Represent setting layouts and layout modifiers
-data LayoutHook = LayoutHook
+data LayoutHook x y = LayoutHook
 
 
 instance Mode ModifyIO LayoutHook (l X.Window -> Config (m X.Window)) l m where
@@ -194,8 +191,7 @@ data HSnd = HSnd
 instance ab ~ (a,b) => ApplyAB HSnd ab b where
     applyAB _ (_, b) = b
 
-data Id = Id
-instance (x~y) => ApplyAB Id x y where applyAB _ x = x
+data Id = Id deriving Show
 
 
 -- | The difference between HNats. Clamped to HZero
@@ -207,15 +203,11 @@ type instance HSubtract HZero b = HZero
 hSubtract :: Proxy a -> Proxy b -> Proxy (HSubtract a b)
 hSubtract _ _ = undefined
 
+type family MergeEither (x :: Either HNat HNat) :: HNat
+type instance MergeEither (Left n) = HZero
+type instance MergeEither (Right n) = n
 
-class HReplicateF (n::HNat) e l | n e -> l where
-    hReplicateF :: Proxy n -> e -> HList l
 
-instance HReplicateF HZero e '[] where
-    hReplicateF _ _ = HNil
-
-instance (ApplyAB e x y, HReplicateF n e r) => HReplicateF (HSucc n) e ((Proxy False, x -> y) ': r) where
-    hReplicateF n e = (hFalse, applyAB e) `HCons` hReplicateF (hPred n) e
 
 
 -- | exactly like hPred, but accept HZero too
@@ -226,37 +218,97 @@ type instance HPred' HZero = HZero
 
 insLt n hold f l =
     l
-     `hAppend`
-    (hReplicateF ({-hPred' $ -} n `hSubtract` hLength l) Id)
-     `hAppend`
+     `hAppendList`
+    (hReplicate (n `hSubtract` hLength l) (hFalse, Id))
+     `hAppendList`
     ((hold,f) `HCons` HNil)
+
+-- | to avoid ambiguous types, we use data Id instead of just id,
+-- and then instead of (.) we have to use this Compose class
+class Compose f g fog | f g -> fog where
+    compose :: f -> g -> fog
+
+instance (b ~ b') => Compose (b -> c) (a -> b') (a -> c) where
+    compose = (.)
+
+instance Compose (a -> b) Id (a -> b) where
+    compose f _ = f
+
+instance Compose Id (a -> b) (a -> b) where
+    compose _ f = f
+
+instance Compose Id Id Id where
+    compose _ f = f
+
+instance (RunComposeIf b f g w,
+          Compose w x y) => Compose (ComposeIf b f g) x y where
+    compose bfg x = runComposeIf bfg `compose` x
+
+instance (RunComposeIf b f g x,
+          Compose w x y) => Compose w (ComposeIf b f g) y where
+    compose w bfg = w `compose` runComposeIf bfg
+
+instance (RunComposeIf b f g x,
+          RunComposeIf b' f' g' w,
+          Compose w x y) => Compose (ComposeIf b' f' g') (ComposeIf b f g) y where
+    compose bfg' bfg = runComposeIf bfg' `compose` runComposeIf bfg
+
+
+class RunComposeIf b f g fg | b f g -> fg where
+    runComposeIf :: ComposeIf b f g -> fg
+
+instance Compose f g fg => RunComposeIf True f g fg where
+    runComposeIf (ComposeIf f g) = compose f g
+
+instance RunComposeIf False f g g where
+    runComposeIf (ComposeIf _ g) = g
+
+data ComposeIf (b :: Bool) f g = ComposeIf f g
+
+composeIf :: Proxy b -> f -> g -> ComposeIf b f g
+composeIf _ = ComposeIf
 
 insGeq n a f l =
     let (b,g) = hLookupByHNat n l
-        h = hCond b (b,g) (a,f . g)
+        h = (hOr b a, composeIf (hNot b) f g)
     in hUpdateAtHNat n h l
+
+hNot :: Proxy b -> Proxy (HNot b)
+hNot _ = Proxy
+
 
 -- | utility class, so that we can use contexts that may not be satisfied,
 -- depending on the length of the accumulated list.
-class Ins2 (b :: Bool) (n :: HNat) (hold :: Bool) f l l' | b n hold f l -> l',b n hold f l' -> l, b hold l l' -> f  where
+class Ins2 (b :: Bool) (n :: HNat) (hold :: Bool) f l l'
+      | b n hold f l -> l'
+       ,b n hold f l' -> l
+       ,b hold l l' -> f
+  where
     ins2 :: Proxy b -> Proxy n -> Proxy hold -> f -> HList l -> HList l'
 
 -- | when l needs to be padded with id
-instance (HReplicateF (HSubtract n (HLength l1)) Id l,
-          HAppendList (HAppendList l1 l) '[(Proxy hold,t1)] ~ l2) =>
-     Ins2 True n hold t1 l1 l2
- where ins2 _ = insLt
+instance 
+     (HAppendList (HAppendListR l1 ids) '[(Proxy hold, t1)],
+      l2 ~ HAppendListR (HAppendListR l1 ids) '[(Proxy hold, t1)],
+      HAppendList l1 ids,
+      HLengthEq l1 b,
+      HReplicateFD (HSubtract n b) id ids,
+      id ~ (Proxy 'False, Id)) =>
+  Ins2 True n hold t1 l1 l2
+   where ins2 _ = insLt
 
--- | when l already has enough elements, just compose. Only when the existing HBool is HFalse
+-- | when l already has enough elements, just compose. But only add the new
+-- function when the existing HBool is HFalse
 instance (HUpdateAtHNat n e l, HLookupByHNat n l,
-      HCond t (Proxy t, a -> b) (Proxy t1, a -> c) e,
-      HLookupByHNatR n l ~ (Proxy t, a -> b),
-      HUpdateAtHNatR n e l ~ l',
-      bc ~ (b -> c)) =>
+      (Proxy (HOr t t1), ComposeIf (HNot t) bc ab) ~ e,
+      HLookupByHNatR n l ~ (Proxy t, ab),
+      HLookupByHNatR n l' ~ e,
+      HUpdateAtHNatR n e l ~ l') =>
      Ins2 False n t1 bc l l'
  where ins2 _ = insGeq
 
-class Ins' (n :: HNat) (hold :: Bool) f l l' | n hold f l -> l' where
+class Ins' (n :: HNat) (hold :: Bool) f l l' | n hold f l -> l'
+  where
     ins' :: Proxy n -> Proxy hold -> f -> HList l -> HList l'
 
 instance ( HLt (HLength l) n ~ b,  Ins2 (HLt (HLength l) n) n hold f l l') => Ins' n hold f l l' where
@@ -271,8 +323,8 @@ bounded.
 ins n e = ins' n hFalse (e =<<)
 
 {- | like  @foldr (.) id@, but for a heteregenous list. This does the other
- order than hComposeList (which is weaker at type inference it seems, since
- the type of the id is needed to find the result...
+ order than hComposeList. To avoid ambiguous types (and allow the FD to be accepted
+ by ghc-7.8) 'Id' is produced instead of 'id'.
 
  >>> hComposeList  ((+1) .*. (*2) .*. HNil) 2
  6
@@ -281,50 +333,48 @@ ins n e = ins' n hFalse (e =<<)
  5
 -}
 class HCompose l f | l -> f where
-    hComp :: HList l -> f
+    hComp_ :: HList l -> f
 
-instance (a ~ a') => HCompose '[] (a -> a') where
-    hComp _ = id
+instance HCompose '[] Id where
+    hComp_ _ = Id
 
-instance ((b -> c) ~ bc,  (a -> c) ~ ac, HCompose r (a -> b)) => HCompose (bc ': r) ac where
-    hComp (HCons g r) = g . hComp r
+instance (Compose bc ab ac, HCompose rs ab) => HCompose (bc ': rs) ac where
+    hComp_ (HCons g r) = g `compose` hComp_ r
+
+{- | handles the empty list case:
+
+>>> hComp HNil ()
+()
+
+>>> hComp_ HNil
+Id
+
+
+-}
+hComp fs x = (hComp_ fs `compose` (\y -> y `asTypeOf` x)) x
+
+
+hMapSnd :: (HMapCxt HList HSnd x y,
+            HMapSndR x ~ y) => HList x -> HList y
+hMapSnd = hMap HSnd
+
+-- | without this ghc cannot infer the result type of hMapSnd
+type family HMapSndR (xs :: [*]) :: [*]
+type instance HMapSndR ((a,b) ': xs) = b ': HMapSndR xs
+type instance HMapSndR '[] = '[]
 
 
 
-type RunConfig l l' a t t2 t3 =
-   (X.LayoutClass l a,
-    HMapAux HSnd t2 t3,
-    SameLength t2 t3,
-    SameLength t3 t2,
-
-    HCompose t (HList '[] -> HList t2),
-
-    HCompose t3 (Config (X.XConfig l) -> Config (X.XConfig l'))
-    )
-
-runConfig' :: forall l l' a t t2 t3. RunConfig l l' a t t2 t3
-    => X.XConfig l ->  HList t -> IO (X.XConfig l')
 runConfig' defConfig x = do
-    let Config c = hComp
-            (applyAB (HMap HSnd) (hComp x HNil) :: HList t3)
-            (return defConfig)
+    let returnConfig = return :: a -> Config a
+        Config c = hComp (hMapSnd (hComp x HNil))
+            (returnConfig defConfig)
 
     (a,w) <- runWriterT c
     print (w [])
     return a
 
-runConfig :: forall l l' a t t2 t3. (RunConfig l l' a t t2 t3,
-    l ~ (X.Choose X.Tall (X.Choose (X.Mirror X.Tall) X.Full)),
-    Read (l' X.Window), X.LayoutClass l' X.Window)
-    => HList t -> IO ()
-runConfig x = do
-    let Config c = hComp
-            (hMap HSnd (hComp x HNil) :: HList t3)
-            (return X.defaultConfig)
-
-    (a,w) <- runWriterT c
-    print (w [])
-    X.xmonad a
+runConfig x = X.xmonad =<< runConfig' X.defaultConfig x
 
 -- * Tests
 {-
@@ -434,11 +484,12 @@ $(fmap concat $ sequence
             [funD 'm [clause [] (normalB [| error "impossible to satisfy" |]) [] ]]
           `const` act              -- suppress unused var warning
 
+         xyTyVarBinders = [v "x", v "y"]
+            where v x = KindedTV (mkName x) (ArrowT `AppT` StarT `AppT` StarT)
+
      sequence $
 
-      [fallback (promotedT n) | n <- ['ModifyIO, 'Modify, 'Set] ] ++
-
-      [dataD (return []) d [] [normalC d []] []
+      [dataD (return []) d xyTyVarBinders [normalC d []] []
 
       ,mkId 'ModifyIO [t| $ty -> Config $ty |]
                         [| \f c -> do

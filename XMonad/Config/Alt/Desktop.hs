@@ -32,6 +32,11 @@ module XMonad.Config.Alt.Desktop (
   avoidStrutsOn,
   avoidStruts,
 
+
+  -- * precedences (apply modifiers in what should be the right order)
+  AvoidStrutsPrec, StatusBarPrec,
+  EwmhPrec,
+
   ) where
 
 import qualified XMonad as X
@@ -50,7 +55,7 @@ ewmh c = ins' ewmhPrec hTrue (liftM E.ewmh) c
 
 -- | See 'ManageDocks.avoidStrutsOn'
 avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
-                  ( liftM (m (proxy :: Proxy Modify) LayoutHook (ManageDocks.avoidStrutsOn a) ))
+                  ((m (Proxy :: Proxy Modify) LayoutHook (ManageDocks.avoidStrutsOn a)) =<<)
                   c
 
 
@@ -58,7 +63,7 @@ avoidStrutsOn a c = ins' avoidStrutsPrec hTrue
 
 -- | See 'ManageDocks.avoidStruts'
 avoidStruts c = ins' avoidStrutsPrec hTrue
-              (m (proxy :: Proxy Modify) LayoutHook ManageDocks.avoidStruts =<<)
+              (m (Proxy :: Proxy Modify) LayoutHook ManageDocks.avoidStruts =<<)
               c
 
 -- | See 'DynamicLog.statusBar'
