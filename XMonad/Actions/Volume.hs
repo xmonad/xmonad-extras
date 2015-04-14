@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- boilerplate {{{
 ----------------------------------------------------------------------------
 -- |
@@ -60,6 +61,10 @@ import System.IO
 import System.Process
 import Text.ParserCombinators.Parsec
 import XMonad.Core
+
+#if MIN_VERSION_base(4,8,0)
+import Prelude hiding ((<*))
+#endif
 
 infixl 1 <*
 (<*) :: Monad m => m a -> m b -> m a
