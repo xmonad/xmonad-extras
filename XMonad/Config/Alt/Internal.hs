@@ -270,11 +270,11 @@ composeIf _ = ComposeIf
 
 insGeq n a f l =
     let (b,g) = hLookupByHNat n l
-        h = (hOr b a, composeIf (hNot b) f g)
+        h = (hOr b a, composeIf (hNotTF b) f g)
     in hUpdateAtHNat n h l
 
-hNot :: Proxy b -> Proxy (HNot b)
-hNot _ = Proxy
+hNotTF :: Proxy a -> Proxy (HNot a)
+hNotTF _ = Proxy
 
 
 -- | utility class, so that we can use contexts that may not be satisfied,
