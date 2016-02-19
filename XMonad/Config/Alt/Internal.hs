@@ -194,13 +194,7 @@ instance ab ~ (a,b) => ApplyAB HSnd ab b where
 data Id = Id deriving Show
 
 
--- | The difference between HNats. Clamped to HZero
-type family HSubtract (a :: HNat) (b :: HNat) :: HNat
-type instance HSubtract (HSucc a) (HSucc b) = HSubtract a b
-type instance HSubtract a HZero = a
-type instance HSubtract HZero b = HZero
-
-hSubtract :: Proxy a -> Proxy b -> Proxy (HSubtract a b)
+hSubtract :: Proxy a -> Proxy b -> Proxy (MergeEither (HSubtract a b))
 hSubtract _ _ = undefined
 
 type family MergeEither (x :: Either HNat HNat) :: HNat
@@ -292,7 +286,7 @@ instance
       l2 ~ HAppendListR (HAppendListR l1 ids) '[(Proxy hold, t1)],
       HAppendList l1 ids,
       HLengthEq l1 b,
-      HReplicateFD (HSubtract n b) id ids,
+      HReplicateFD (MergeEither (HSubtract n b)) id ids,
       id ~ (Proxy 'False, Id)) =>
   Ins2 True n hold t1 l1 l2
    where ins2 _ = insLt
