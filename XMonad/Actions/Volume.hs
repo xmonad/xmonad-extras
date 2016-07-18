@@ -55,20 +55,9 @@ module XMonad.Actions.Volume (
 
 import Control.Monad
 import Control.Monad.Trans
-import Data.List.Split (splitOn)
 import Data.Maybe
-import System.IO
-import System.Process
-import Text.ParserCombinators.Parsec
 import XMonad.Core
-
-#if MIN_VERSION_base(4,8,0)
-import Prelude hiding ((<*))
-#endif
-
-infixl 1 <*
-(<*) :: Monad m => m a -> m b -> m a
-pa <* pb = pa >>= \a -> pb >> return a
+import Sound.ALSA.Mixer
 
 {- $usage
 You can use this module with the following in your @~\/.xmonad\/xmonad.hs@:
@@ -145,13 +134,13 @@ toggleMuteChannels  cs = modifyMuteChannels   cs not
 raiseVolumeChannels cs = modifyVolumeChannels cs . (+)
 lowerVolumeChannels cs = modifyVolumeChannels cs . (subtract)
 
-getVolumeChannels     = liftIO . fmap fst . amixerGetAll
-getMuteChannels       = liftIO . fmap snd . amixerGetAll
-getVolumeMuteChannels = liftIO            . amixerGetAll
+getVolumeChannels     = liftIO . fmap fst . alsaGetAll
+getMuteChannels       = liftIO . fmap snd . alsaGetAll
+getVolumeMuteChannels = liftIO            . alsaGetAll
 
-setVolumeChannels     cs v   = liftIO (amixerSetVolumeOnlyAll v   cs)
-setMuteChannels       cs   m = liftIO (amixerSetMuteOnlyAll     m cs)
-setVolumeMuteChannels cs v m = liftIO (amixerSetAll           v m cs)
+setVolumeChannels     cs v   = liftIO (alsaSetVolumeAll v   cs)
+setMuteChannels       cs   m = liftIO (alsaSetMuteAll     m cs)
+setVolumeMuteChannels cs v m = liftIO (alsaSetAll       v m cs)
 
 modifyVolumeChannels = modify getVolumeChannels setVolumeChannels
 modifyMuteChannels   = modify getMuteChannels   setMuteChannels
@@ -164,90 +153,65 @@ geomMean xs = product xs ** (recip . fromIntegral . length $ xs)
 clip :: (Num t, Ord t) => t -> t
 clip = min 100 . max 0
 
+toRange :: (Integer, Integer) -> Double -> Integer
+toRange (x, y) d = floor (d * (y' - x') / 100 + x')
+  where x' = fromIntegral x
+        y' = fromIntegral y
+        
+fromRange :: (Integer, Integer) -> Integer -> Double
+fromRange (x, y) z = fromIntegral (z - x) / fromIntegral (y - x) * 100
+
 modify :: Monad m => (arg -> m value) -> (arg -> value -> m ()) -> arg -> (value -> value) -> m value
 modify get set cs f = do
     v <- liftM f $ get cs
     set cs v
     return v
 
-outputOf :: String -> IO String
-outputOf s = do
-    uninstallSignalHandlers
-    (hIn, hOut, hErr, p) <- runInteractiveCommand s
-    mapM_ hClose [hIn, hErr]
-    hGetContents hOut <* waitForProcess p <* installSignalHandlers
+withControl :: (Control -> IO a) -> [String] -> IO a
+withControl f cs = withMixer "default" $ \mixer -> do 
+  (control:_) <- catMaybes <$> mapM (getControlByName mixer) cs
+  f control
 
-amixerSetAll :: Double -> Bool -> [String] -> IO ()
-amixerSet    :: Double -> Bool ->  String  -> IO String
-amixerGetAll :: [String] -> IO (Double, Bool)
-amixerGet    ::  String  -> IO String
-amixerSetAll    = (mapM_ .) . amixerSet
-amixerSet v m s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ show (clip v) ++ "% " ++ (if m then "" else "un") ++ "mute"
-amixerGetAll    = fmap parseAmixerGetAll . mapM amixerGet
-amixerGet     s = outputOf $ "amixer get \'" ++ s ++ "\'"
+alsaGetAll :: [String] -> IO (Double, Bool)
+alsaGetAll = withControl $ \control -> (,) <$> alsaGetVolume control 
+                                           <*> alsaGetMute control
 
-amixerSetVolumeOnlyAll :: Double -> [String] -> IO ()
-amixerSetVolumeOnly    :: Double ->  String  -> IO String
-amixerSetVolumeOnlyAll  = mapM_ . amixerSetVolumeOnly
-amixerSetVolumeOnly v s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ show (clip v) ++ "%"
+alsaGetVolume :: Control -> IO Double
+alsaGetVolume control = do
+  let Just playbackVolume = playback $ volume control
+      volChans = value playbackVolume
+  range <- getRange playbackVolume
+  vals <- mapM (\chan -> getChannel chan volChans) (channels volChans)
+  return $ geomMean $ map (fromRange range . fromJust) vals
 
-amixerSetMuteOnlyAll :: Bool -> [String] -> IO ()
-amixerSetMuteOnly    :: Bool ->  String  -> IO String
-amixerSetMuteOnlyAll  = mapM_ . amixerSetMuteOnly
-amixerSetMuteOnly m s = outputOf $ "amixer set '" ++ s ++ "' playback " ++ (if m then "" else "un") ++ "mute"
+alsaGetMute :: Control -> IO Bool
+alsaGetMute control = do
+  let Just muteChans = playback $ switch control
+  all id . map fromJust <$> mapM (\chan -> getChannel chan muteChans) (channels muteChans)
 
-parseAmixerGetAll :: [String] -> (Double, Bool)
-parseAmixerGetAll ss = (geomMean vols, mute) where
-    (vols, mutings)  = unzip [v | Right p <- map (parse amixerGetParser "") ss, v <- p]
-    mute             = or . catMaybes $ mutings
+alsaSetVolumeAll :: Double -> [String] -> IO ()
+alsaSetVolumeAll v = withControl (alsaSetVolume v)
 
-amixerGetParser :: Parser [(Double, Maybe Bool)]
-amixerGetParser = headerLine >> playbackChannels >>= volumes <* eof
+alsaSetVolume :: Double -> Control -> IO () 
+alsaSetVolume v control = do
+  let Just playbackVolume = playback $ volume control
+      volChans = value playbackVolume
+  range <- getRange playbackVolume
+  forM_ (channels volChans) $ \chan -> do 
+    setChannel chan volChans (toRange range (clip v))
 
-headerLine       :: Parser  String
-playbackChannels :: Parser [String]
-volumes          :: [String] -> Parser [(Double, Maybe Bool)]
-headerLine = string "Simple mixer control " >> upTo '\n'
-playbackChannels = keyValueLine >>= \kv -> case kv of
-    ("Playback channels", v) -> return (splitOn " - " v)
-    _                        -> playbackChannels
-volumes channels = fmap concat . many1 $ keyValueLine >>= \kv -> return $ case kv of
-    (k, v) | k `elem` channels -> parseChannel v
-           | otherwise         -> []
+alsaSetMuteAll :: Bool -> [String] -> IO ()
+alsaSetMuteAll m = withControl (alsaSetMute m)
 
-upTo         :: Char -> Parser String
-keyValueLine :: Parser (String, String)
-upTo c = many (satisfy (/= c)) <* char c
-keyValueLine = do
-    string "  "
-    key   <- upTo ':'
-    value <- upTo '\n'
-    return (key, drop 1 value)
+alsaSetMute :: Bool -> Control -> IO ()
+alsaSetMute m control = do
+  let Just muteChans = playback $ switch control
+  forM_ (channels muteChans) $ \chan -> setChannel chan muteChans m
 
-parseChannel  :: String -> [(Double, Maybe Bool)]
-channelParser :: Parser    [(Double, Maybe Bool)]
-parseChannel  = either (const []) id . parse channelParser ""
-channelParser = fmap catMaybes (many1 playbackOrCapture) <* eof
-
-playbackOrCapture :: Parser (Maybe (Double, Maybe Bool))
-playbackOrCapture = do
-    f <- (string "Playback " >> return Just) <|>
-         (string "Capture "  >> return (const Nothing))
-    many1 digit
-    char ' '
-    es <- extras
-    case filter ('%' `elem`) es of
-        [volume] -> return . f . (,) (read (init volume) :: Double) $ case ("off" `elem` es, "on" `elem` es) of
-            (False, False) -> Nothing
-            (mute, _)      -> Just mute
-        _        -> fail "no percentage-volume found in playback section"
-
-extras :: Parser [String]
-extras = sepBy' (char '[' >> upTo ']') (char ' ')
-
-sepBy' :: Parser a -> Parser b -> Parser [a]
-sepBy' p sep = liftM2 (:) p loop where
-    loop = (sep >> (liftM2 (:) p loop <|> return [])) <|> return []
+alsaSetAll :: Double -> Bool -> [String] -> IO ()
+alsaSetAll v m = withControl $ \control -> do
+  alsaSetVolume v control
+  alsaSetMute m control
 
 -- | Helper function to output current volume via osd_cat.  (Needs the osd_cat executable).
 -- The second parameter is passed True when the speakers are muted and should

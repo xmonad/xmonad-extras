@@ -15,11 +15,8 @@ build-type:         Simple
 flag small_base
   description: Choose the new smaller, split-up base package.
 
-flag with_parsec
-  description: Build modules depending on the parsec package
-
-flag with_split
-  description: Build modules depending on Data.Split
+flag with_sound
+  description: Build modules depending on the alsa-mixer package
 
 flag with_hint
   description: Build modules depending on hint(for evaluating Haskell expressions at runtime).
@@ -58,8 +55,8 @@ library
     if impl (ghc == 6.10.1) && arch (x86_64)
         ghc-options:    --disable-optimizations
 
-    if flag(with_parsec) && flag(with_split)
-        build-depends: parsec >= 2 && < 4, split >= 0.1 && < 0.3
+    if flag(with_sound)
+        build-depends: alsa-mixer >= 0.2
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
