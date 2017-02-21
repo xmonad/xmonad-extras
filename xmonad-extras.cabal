@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.12.1
+version:            0.13.0
 homepage:           http://projects.haskell.org/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -44,7 +44,7 @@ library
     else
         build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.10 && <0.13, xmonad-contrib>=0.10 && <0.13
+    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
 
     if true
         ghc-options:        -fwarn-tabs -Wall
