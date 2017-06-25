@@ -58,6 +58,9 @@ import Control.Monad.Trans
 import Data.Maybe
 import XMonad.Core
 import Sound.ALSA.Mixer
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>), (<*>))
+#endif
 
 {- $usage
 You can use this module with the following in your @~\/.xmonad\/xmonad.hs@:
