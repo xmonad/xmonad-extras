@@ -18,6 +18,7 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
+        - c2hs
         sources:
         - hvr-ghc
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
@@ -31,6 +32,7 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
+        - c2hs
         sources:
         - hvr-ghc
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
@@ -44,6 +46,7 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
+        - c2hs
         sources:
         - hvr-ghc
   - env: BUILD=stack ARGS="--resolver lts-8.20"
@@ -54,6 +57,7 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
+        - c2hs
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default"
     addons:
@@ -62,6 +66,7 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
+        - c2hs
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC HEAD"
     addons:
@@ -73,6 +78,7 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
+        - c2hs
         sources:
         - hvr-ghc
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -83,6 +89,7 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
+        - c2hs
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
   - env: BUILD=stack ARGS="--resolver nightly"
