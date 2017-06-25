@@ -1,4 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -25,7 +27,6 @@ module XMonad.Prompt.MPD (-- * Usage
                          ,findOrAdd
                          )  where
 import Control.Monad
-import qualified Data.ByteString as B
 import Data.Char
 import qualified Data.Map as M
 import Data.Maybe
@@ -100,7 +101,7 @@ extractSongs = mapMaybe extractSong
 -- returns the songs from that album.
 findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
 findMatching runMPD xp metas = do
-  resp <- io . runMPD . fmap extractSongs . listAllInfo $ Path B.empty
+  resp <- io . runMPD . fmap extractSongs . listAllInfo $ ("" :: Path)
   case resp of
     Left err -> trace ("XMonad.Prompt.MPD: MPD returned an error: " ++ show err)
                 >> return []
