@@ -16,14 +16,10 @@ matrix:
         - ghc-7.8.4
         - happy-1.19.5
         - alex-3.1.7
+        - libasound2
+        - libasound2-dev
         sources:
         - hvr-ghc
-  - env: BUILD=stack ARGS="--resolver lts-2.22"
-    compiler: ": #stack 7.8.4"
-    addons:
-      apt:
-        packages:
-        - libgmp-dev
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 7.10.3"
     addons:
@@ -33,17 +29,10 @@ matrix:
         - ghc-7.10.3
         - happy-1.19.5
         - alex-3.1.7
+        - libasound2
+        - libasound2-dev
         sources:
         - hvr-ghc
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3"
-    addons:
-      apt:
-        packages:
-        - libgmp-dev
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3 osx"
-    os: osx
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 8.0.2"
     addons:
@@ -53,26 +42,26 @@ matrix:
         - ghc-8.0.2
         - happy-1.19.5
         - alex-3.1.7
+        - libasound2
+        - libasound2-dev
         sources:
         - hvr-ghc
-  - env: BUILD=stack ARGS="--resolver lts-8.3"
+  - env: BUILD=stack ARGS="--resolver lts-8.20"
     compiler: ": #stack 8.0.2"
     addons:
       apt:
         packages:
         - libgmp-dev
-  - env: BUILD=stack ARGS="--resolver lts-8.3"
-    compiler: ": #stack 8.0.2 osx"
-    os: osx
+        - libasound2
+        - libasound2-dev
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default"
     addons:
       apt:
         packages:
         - libgmp-dev
-  - env: BUILD=stack ARGS=""
-    compiler: ": #stack default osx"
-    os: osx
+        - libasound2
+        - libasound2-dev
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC HEAD"
     addons:
@@ -82,6 +71,8 @@ matrix:
         - ghc-head
         - happy-1.19.5
         - alex-3.1.7
+        - libasound2
+        - libasound2-dev
         sources:
         - hvr-ghc
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -90,9 +81,8 @@ matrix:
       apt:
         packages:
         - libgmp-dev
-  - env: BUILD=stack ARGS="--resolver nightly"
-    compiler: ": #stack nightly osx"
-    os: osx
+        - libasound2
+        - libasound2-dev
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
   - env: BUILD=stack ARGS="--resolver nightly"
