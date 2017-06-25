@@ -63,12 +63,12 @@ library
         if impl(ghc < 7.2)
                 build-depends: hint >= 0.3 && < 0.4, network
         else
-                build-depends: hint >= 0.3.3.3 && < 0.5, network
+                build-depends: hint >= 0.3.3.3 && < 0.8, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd >= 0.8 && < 0.9, bytestring >= 0.9 && < 0.11
+        build-depends: libmpd >= 0.9 && < 0.10, bytestring >= 0.9 && < 0.11
         exposed-modules: XMonad.Prompt.MPD
 
     if flag(with_regex_posix)
