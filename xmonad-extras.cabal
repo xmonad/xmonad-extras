@@ -12,9 +12,6 @@ maintainer:         Sibi <sibi@psibi.in>, daniel@wagner-home.com, daniel.schoepe
 cabal-version:      >= 1.2.1
 build-type:         Simple
 
-flag small_base
-  description: Choose the new smaller, split-up base package.
-
 flag with_sound
   description: Build modules depending on the alsa-mixer package
 
@@ -39,33 +36,21 @@ flag testing
   default: False
 
 library
-    if flag(small_base)
-        build-depends: base >= 3 && < 5, containers, directory, process, random, old-time, old-locale
-    else
-        build-depends: base < 3
 
-    build-depends:      mtl, unix, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
-
-    if true
-        ghc-options:        -fwarn-tabs -Wall
+    build-depends:      base, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
+    ghc-options:        -fwarn-tabs -Wall -fno-warn-unused-do-bind
 
     -- Upload blocked by this: https://github.com/haskell/cabal/issues/2527
     -- Uncomment when it's fixed
     -- if flag(testing)
     --     ghc-options:    -Werror
 
-    if impl (ghc == 6.10.1) && arch (x86_64)
-        ghc-options:    --disable-optimizations
-
     if flag(with_sound)
         build-depends: alsa-mixer >= 0.2
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        if impl(ghc < 7.2)
-                build-depends: hint >= 0.3 && < 0.4, network
-        else
-                build-depends: hint >= 0.3.3.3 && < 0.8, network
+        build-depends: hint >= 0.3.3.3 && < 0.8, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
@@ -89,8 +74,7 @@ library
 
     exposed-modules: XMonad.Hooks.PerWindowKbdLayout
 
-    if impl(ghc >= 6.12.1)
-        ghc-options:    -fno-warn-unused-do-bind
+
 
 -- executable xmonadcmd
 --     main-is: XMonadCmd.hs
