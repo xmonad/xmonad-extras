@@ -7,20 +7,6 @@ cache:
   - "$HOME/.stack"
 matrix:
   include:
-  - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=
-    compiler: ": #GHC 7.8.4"
-    addons:
-      apt:
-        packages:
-        - cabal-install-1.18
-        - ghc-7.8.4
-        - happy-1.19.5
-        - alex-3.1.7
-        - libasound2
-        - libasound2-dev
-        - c2hs
-        sources:
-        - hvr-ghc
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 7.10.3"
     addons:
@@ -49,7 +35,21 @@ matrix:
         - c2hs
         sources:
         - hvr-ghc
-  - env: BUILD=stack ARGS="--resolver lts-8.20"
+  - env: BUILD=cabal GHCVER=8.2.1 RUN_TESTS=--run-tests
+    compiler: ": #GHC 8.2.1"
+    addons:
+      apt:
+        packages:
+        - cabal-install-2.0
+        - ghc-8.2.1
+        - happy-1.19.5
+        - alex-3.1.7
+        - libasound2
+        - libasound2-dev
+        - c2hs
+        sources:
+        - hvr-ghc
+  - env: BUILD=stack ARGS="--resolver lts-9.0"
     compiler: ": #stack 8.0.2"
     addons:
       apt:
