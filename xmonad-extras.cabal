@@ -11,6 +11,7 @@ author:             The Daniels Schoepe and Wagner
 maintainer:         Sibi <sibi@psibi.in>, daniel@wagner-home.com, daniel.schoepe@googlemail.com
 cabal-version:      >= 1.2.1
 build-type:         Simple
+extra-source-files:  README.md, CHANGELOG.md
 
 flag with_sound
   description: Build modules depending on the alsa-mixer package
