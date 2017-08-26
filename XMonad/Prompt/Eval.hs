@@ -8,7 +8,7 @@
 -- Stability   :  unstable
 -- Portability :  unportable
 --
--- A prompt for evaluating Haskell expressions(in the context of the running
+-- A prompt for evaluating Haskell expressions (in the context of the running
 -- xmonad instance).
 --
 -----------------------------------------------------------------------------
