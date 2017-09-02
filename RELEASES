@@ -18,7 +18,7 @@ Address hackage build failure.
 
 0.9.1
 
-This is mainly a compatability release, because I forgot to add upper
+This is mainly a compatibility release, because I forgot to add upper
 version bounds on the dependencies in the previous release, which
 caused a build failure due to a new version of the libmpd-bindings.
 
