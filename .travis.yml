@@ -8,12 +8,12 @@ cache:
 matrix:
   fast_finish: true
   include:
-  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
+  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=2.0 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 7.10.3"
     addons:
       apt:
         packages:
-        - cabal-install-1.22
+        - cabal-install-2.0
         - ghc-7.10.3
         - happy-1.19.5
         - alex-3.1.7
@@ -22,12 +22,12 @@ matrix:
         - c2hs
         sources:
         - hvr-ghc
-  - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
+  - env: BUILD=cabal GHCVER=8.0.2 CABALVER=2.0 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 8.0.2"
     addons:
       apt:
         packages:
-        - cabal-install-1.24
+        - cabal-install-2.0
         - ghc-8.0.2
         - happy-1.19.5
         - alex-3.1.7
