@@ -20,6 +20,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
         sources:
         - hvr-ghc
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=2.0 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
@@ -34,6 +35,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
         sources:
         - hvr-ghc
   - env: BUILD=cabal GHCVER=8.2.1 RUN_TESTS=--run-tests
@@ -48,6 +50,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
         sources:
         - hvr-ghc
   - env: BUILD=stack ARGS="--resolver lts-9.2"
@@ -59,6 +62,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
   - env: BUILD=stack ARGS=""
     compiler: ": #stack default"
     addons:
@@ -68,6 +72,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC HEAD"
     addons:
@@ -80,6 +85,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
         sources:
         - hvr-ghc
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -91,6 +97,7 @@ matrix:
         - libasound2
         - libasound2-dev
         - c2hs
+        - libxrandr-dev 
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
   - env: BUILD=stack ARGS="--resolver nightly"
