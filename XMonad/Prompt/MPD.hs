@@ -20,11 +20,14 @@
 
 module XMonad.Prompt.MPD (-- * Usage
                           -- $usage
-                          findMatching
-                         ,addMatching
-                         ,addAndPlay
-                         ,RunMPD
-                         ,findOrAdd
+                          findMatching,
+                          findMatchingWith,
+                          addMatching,
+                          addMatchingWith,
+                          addAndPlay,
+                          addAndPlayWith,
+                          RunMPD,
+                          findOrAdd
                          )  where
 import Control.Monad
 import Data.Char
@@ -33,7 +36,7 @@ import Data.Maybe
 import Network.MPD
 import XMonad
 import XMonad.Prompt
-import Data.List as L (nub,isPrefixOf,find)
+import Data.List as L (find, isPrefixOf, nub)
 
 -- $usage
 --
@@ -75,16 +78,16 @@ extractMetadata meta = fromMaybe "Unknown" . join . fmap listToMaybe .
                        M.lookup meta . M.map (map toString) . sgTags
 
 -- | Creates a case-insensitive completion function from a list.
-mkComplLst :: [String] -> String -> IO [String]
-mkComplLst lst s = return . filter isPrefix' $ lst
-    where isPrefix' s' = map toLower s `isPrefixOf` map toLower s'
+mkComplLst :: (String -> String -> Bool) -> [String] -> String -> IO [String]
+mkComplLst cmp lst s = return . filter matches $ lst
+    where matches s' = map toLower s `cmp` map toLower s'
 
 -- | Helper function for 'findMatching'
-findMatching' :: XPConfig -> [Song] -> Metadata -> X [Song]
-findMatching' _ [] _ = return []
-findMatching' xp songs meta = do
+findMatching' :: (String -> String -> Bool) -> XPConfig -> [Song] -> Metadata -> X [Song]
+findMatching' _ _ [] _ = return []
+findMatching' cmp xp songs meta = do
   answer <- mkXPromptWithReturn (MPDPrompt (show meta)) xp
-           (mkComplLst . nub . map (extractMetadata meta) $ songs)
+           (mkComplLst cmp . nub . map (extractMetadata meta) $ songs)
            return
   case answer of
     Just input -> return $ filter ((==input) . extractMetadata meta) songs
@@ -99,13 +102,20 @@ extractSongs = mapMaybe extractSong
 -- [Artist, Album] as third argument, this will prompt the user for an
 -- artist(with tab-completion), then for an album by that artist and then
 -- returns the songs from that album.
-findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
-findMatching runMPD xp metas = do
+findMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X [Song]
+findMatchingWith matchFun runMPD xp metas = do
   resp <- io . runMPD . fmap extractSongs . listAllInfo $ ("" :: Path)
   case resp of
     Left err -> trace ("XMonad.Prompt.MPD: MPD returned an error: " ++ show err)
                 >> return []
-    Right songs -> foldM (findMatching' xp) songs metas
+    Right songs -> foldM (findMatching' matchFun xp) songs metas
+
+-- | Lets the user filter out non-matching songs. For example, if given
+-- [Artist, Album] as third argument, this will prompt the user for an
+-- artist(with tab-completion), then for an album by that artist and then
+-- returns the songs from that album.
+findMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Song]
+findMatching = findMatchingWith isPrefixOf
 
 -- | Determine playlist position of the song and add it, if it isn't present.
 findOrAdd :: Song -> MPD Int
@@ -116,13 +126,22 @@ findOrAdd s = playlistInfo Nothing >>= \pl ->
   where unwrapId (Id i) = i
 
 -- | Add all selected songs to the playlist if they are not in it.
-addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
-addMatching runMPD xp metas = do
-  matches <- findMatching runMPD xp metas
+addMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X [Int]
+addMatchingWith matchFun runMPD xp metas = do
+  matches <- findMatchingWith matchFun runMPD xp metas
   fmap (either (const []) id) . io . runMPD . mapM findOrAdd $ matches
 
+-- | Add all selected songs to the playlist if they are not in it.
+addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
+addMatching = addMatchingWith isPrefixOf
+
 -- | Add matching songs and play the first one.
-addAndPlay :: RunMPD -> XPConfig -> [Metadata] -> X ()
-addAndPlay runMPD xp ms = do
-  ids <- addMatching runMPD xp ms
+addAndPlayWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X ()
+addAndPlayWith matchFun runMPD xp ms = do
+  ids <- addMatchingWith matchFun runMPD xp ms
   whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId . Id)
+
+-- | Add matching songs and play the first one.
+addAndPlay :: RunMPD ->  XPConfig -> [Metadata] -> X ()
+addAndPlay = addAndPlayWith isPrefixOf
+
