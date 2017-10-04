@@ -26,6 +26,8 @@ module XMonad.Prompt.MPD (-- * Usage
                           addMatchingWith,
                           addAndPlay,
                           addAndPlayWith,
+                          loadPlaylist,
+                          loadPlaylistWith,
                           RunMPD,
                           findOrAdd
                          )  where
@@ -37,6 +39,7 @@ import Network.MPD
 import XMonad
 import XMonad.Prompt
 import Data.List as L (find, isPrefixOf, nub)
+import qualified Data.ByteString.Char8 as C
 
 -- $usage
 --
@@ -144,4 +147,19 @@ addAndPlayWith matchFun runMPD xp ms = do
 -- | Add matching songs and play the first one.
 addAndPlay :: RunMPD ->  XPConfig -> [Metadata] -> X ()
 addAndPlay = addAndPlayWith isPrefixOf
+
+-- | Load an existing playlist and play it.
+loadPlaylistWith :: (String -> String -> Bool) -> RunMPD ->  XPConfig -> X ()
+loadPlaylistWith matchFun runMPD xp = do
+  playlists <- fmap (either (const []) id) . io . runMPD $ listPlaylists
+  mkXPrompt (MPDPrompt "Playlist: ") xp
+    (mkComplLst matchFun . nub . map toString $ playlists)
+    (\s -> do io $ runMPD $ do clear
+                               load $ PlaylistName $ C.pack s
+                               play Nothing
+              return ())
+  
+-- | Load an existing playlist and play it.
+loadPlaylist :: RunMPD ->  XPConfig -> X ()
+loadPlaylist = loadPlaylistWith isPrefixOf
 
