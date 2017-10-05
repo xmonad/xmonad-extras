@@ -28,15 +28,18 @@ module XMonad.Prompt.MPD (-- * Usage
                           addAndPlayWith,
                           loadPlaylist,
                           loadPlaylistWith,
+                          addAndPlayAny,
                           RunMPD,
                           findOrAdd
                          )  where
 import Control.Monad
 import Data.Char
+import Data.List as L
 import qualified Data.Map as M
 import Data.Maybe
+import Data.String
 import Network.MPD
-import XMonad
+import XMonad hiding ((=?))
 import XMonad.Prompt
 import Data.List as L (find, isPrefixOf, nub)
 import qualified Data.ByteString.Char8 as C
@@ -163,3 +166,16 @@ loadPlaylistWith matchFun runMPD xp = do
 loadPlaylist :: RunMPD ->  XPConfig -> X ()
 loadPlaylist = loadPlaylistWith isPrefixOf
 
+-- | Add songs which match all of the given words with regard to any of the metadata.
+addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
+addAndPlayAny runMPD xp metas = do
+  mkXPrompt (MPDPrompt "Search: ") xp
+    (historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==))
+    (\s -> do io $ runMPD $ do
+                clear
+                songlists <- mapM (\t -> do sl <- mapM (\m -> search (m =? fromString t)) metas
+                                            return $ concat sl) $ words s
+                let songs = foldl L.intersect (head songlists) songlists
+                fmap (either (const []) id) . io . runMPD . mapM findOrAdd $ songs
+                play Nothing
+              return ())
