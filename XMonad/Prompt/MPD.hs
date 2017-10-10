@@ -29,6 +29,7 @@ module XMonad.Prompt.MPD (-- * Usage
                           loadPlaylist,
                           loadPlaylistWith,
                           addAndPlayAny,
+                          pickPlayListItem,
                           RunMPD,
                           findOrAdd
                          )  where
@@ -178,4 +179,27 @@ addAndPlayAny runMPD xp metas = do
                 let songs = foldl L.intersect (head songlists) songlists
                 fmap (either (const []) id) . io . runMPD . mapM findOrAdd $ songs
                 play Nothing
+              return ())
+
+
+-- | Pick a song from the current playlist.
+pickPlayListItem :: RunMPD -> XPConfig -> X ()
+pickPlayListItem runMPD xp = do
+  mCurrentSong <- io $ runMPD $ currentSong
+  let curTitle = case mCurrentSong of
+                  Left _ -> ""
+                  Right mSong -> ""
+  mkXPrompt (MPDPrompt "Pick") (xp {defaultText = curTitle})
+    (\s -> do pSongs <- io $ runMPD $ playlistSearch (Title =? fromString s)
+              case pSongs of
+                Left _ -> return []
+                Right songs -> return $ take 100 $ nub $ map toString
+                               $ concat $ catMaybes $ map (M.lookup Title . sgTags) songs)
+    (\s -> do io $ runMPD $ do
+                pSongs <- io $ runMPD $ playlistSearch (Title =? fromString s)
+                case pSongs of
+                  Left _ -> return ()
+                  Right songs -> case sgId $ head songs of
+                                   Nothing -> return ()
+                                   Just id -> playId id
               return ())
