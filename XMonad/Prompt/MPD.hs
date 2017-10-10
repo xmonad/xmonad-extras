@@ -90,7 +90,8 @@ mkComplLst cmp lst s = return . filter matches $ lst
     where matches s' = map toLower s `cmp` map toLower s'
 
 -- | Helper function for 'findMatching'
-findMatching' :: (String -> String -> Bool) -> XPConfig -> [Song] -> Metadata -> X [Song]
+findMatching' :: (String -> String -> Bool) -> XPConfig -> [Song] -> Metadata
+              -> X [Song]
 findMatching' _ _ [] _ = return []
 findMatching' cmp xp songs meta = do
   answer <- mkXPromptWithReturn (MPDPrompt (show meta)) xp
@@ -109,7 +110,8 @@ extractSongs = mapMaybe extractSong
 -- [Artist, Album] as third argument, this will prompt the user for an
 -- artist(with tab-completion), then for an album by that artist and then
 -- returns the songs from that album.
-findMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X [Song]
+findMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
+                 -> [Metadata] -> X [Song]
 findMatchingWith matchFun runMPD xp metas = do
   resp <- io . runMPD . fmap extractSongs . listAllInfo $ ("" :: Path)
   case resp of
@@ -133,7 +135,8 @@ findOrAdd s = playlistInfo Nothing >>= \pl ->
   where unwrapId (Id i) = i
 
 -- | Add all selected songs to the playlist if they are not in it.
-addMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X [Int]
+addMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
+                -> [Metadata] -> X [Int]
 addMatchingWith matchFun runMPD xp metas = do
   matches <- findMatchingWith matchFun runMPD xp metas
   fmap (either (const []) id) . io . runMPD . mapM findOrAdd $ matches
@@ -143,7 +146,8 @@ addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
 addMatching = addMatchingWith isPrefixOf
 
 -- | Add matching songs and play the first one.
-addAndPlayWith :: (String -> String -> Bool) -> RunMPD -> XPConfig -> [Metadata] -> X ()
+addAndPlayWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
+               -> [Metadata] -> X ()
 addAndPlayWith matchFun runMPD xp ms = do
   ids <- addMatchingWith matchFun runMPD xp ms
   whenJust (listToMaybe ids) ((>> return ()) . io . runMPD . playId . Id)
@@ -167,17 +171,22 @@ loadPlaylistWith matchFun runMPD xp = do
 loadPlaylist :: RunMPD ->  XPConfig -> X ()
 loadPlaylist = loadPlaylistWith isPrefixOf
 
--- | Add songs which match all of the given words with regard to any of the metadata.
+-- | Add songs which match all of the given words with regard to any
+-- of the metadata.
 addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlayAny runMPD xp metas = do
   mkXPrompt (MPDPrompt "Search: ") xp
     (historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==))
     (\s -> do io $ runMPD $ do
                 clear
-                songlists <- mapM (\t -> do sl <- mapM (\m -> search (m =? fromString t)) metas
-                                            return $ concat sl) $ words s
+                songlists <- mapM (\t -> do
+                                      sl <- mapM (\m -> search
+                                                        (m =? fromString t))
+                                            metas
+                                      return $ concat sl) $ words s
                 let songs = foldl L.intersect (head songlists) songlists
-                fmap (either (const []) id) . io . runMPD . mapM findOrAdd $ songs
+                fmap (either (const []) id) . io . runMPD . mapM findOrAdd $
+                  songs
                 play Nothing
               return ())
 
@@ -185,21 +194,18 @@ addAndPlayAny runMPD xp metas = do
 -- | Pick a song from the current playlist.
 pickPlayListItem :: RunMPD -> XPConfig -> X ()
 pickPlayListItem runMPD xp = do
-  mCurrentSong <- io $ runMPD $ currentSong
-  let curTitle = case mCurrentSong of
-                  Left _ -> ""
-                  Right mSong -> ""
-  mkXPrompt (MPDPrompt "Pick") (xp {defaultText = curTitle})
+  mkXPrompt (MPDPrompt "Pick") xp
     (\s -> do pSongs <- io $ runMPD $ playlistSearch (Title =? fromString s)
               case pSongs of
                 Left _ -> return []
                 Right songs -> return $ take 100 $ nub $ map toString
-                               $ concat $ catMaybes $ map (M.lookup Title . sgTags) songs)
+                               $ concat $ catMaybes
+                               $ map (M.lookup Title . sgTags) songs)
     (\s -> do io $ runMPD $ do
                 pSongs <- io $ runMPD $ playlistSearch (Title =? fromString s)
                 case pSongs of
-                  Left _ -> return ()
+                  Left _      -> return ()
                   Right songs -> case sgId $ head songs of
-                                   Nothing -> return ()
-                                   Just id -> playId id
+                                   Nothing    -> return ()
+                                   Just theId -> playId theId
               return ())
