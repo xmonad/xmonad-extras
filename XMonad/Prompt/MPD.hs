@@ -175,7 +175,7 @@ loadPlaylist = loadPlaylistWith isPrefixOf
 -- of the metadata.
 addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlayAny runMPD xp metas = do
-  mkXPrompt (MPDPrompt "Search: ") xp
+  mkXPrompt (MPDPrompt "Search") xp
     (historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==))
     (\s -> do io $ runMPD $ do
                 clear
