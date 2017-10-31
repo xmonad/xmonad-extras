@@ -110,7 +110,8 @@ extractSongs = mapMaybe extractSong
 -- [Artist, Album] as third argument, this will prompt the user for an
 -- artist(with tab-completion), then for an album by that artist and then
 -- returns the songs from that album.
--- @since 0.13.1
+--
+-- @since 0.13.2
 findMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
                  -> [Metadata] -> X [Song]
 findMatchingWith matchFun runMPD xp metas = do
@@ -136,7 +137,8 @@ findOrAdd s = playlistInfo Nothing >>= \pl ->
   where unwrapId (Id i) = i
 
 -- | Add all selected songs to the playlist if they are not in it.
--- @since 0.13.1
+--
+-- @since 0.13.2
 addMatchingWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
                 -> [Metadata] -> X [Int]
 addMatchingWith matchFun runMPD xp metas = do
@@ -148,7 +150,8 @@ addMatching :: RunMPD -> XPConfig -> [Metadata] -> X [Int]
 addMatching = addMatchingWith isPrefixOf
 
 -- | Add matching songs and play the first one.
--- @since 0.13.1
+--
+-- @since 0.13.2
 addAndPlayWith :: (String -> String -> Bool) -> RunMPD -> XPConfig
                -> [Metadata] -> X ()
 addAndPlayWith matchFun runMPD xp ms = do
@@ -160,7 +163,8 @@ addAndPlay :: RunMPD ->  XPConfig -> [Metadata] -> X ()
 addAndPlay = addAndPlayWith isPrefixOf
 
 -- | Load an existing playlist and play it.
--- @since 0.13.1
+--
+-- @since 0.13.2
 loadPlaylistWith :: (String -> String -> Bool) -> RunMPD ->  XPConfig -> X ()
 loadPlaylistWith matchFun runMPD xp = do
   playlists <- fmap (either (const []) id) . io . runMPD $ listPlaylists
@@ -177,7 +181,8 @@ loadPlaylist = loadPlaylistWith isPrefixOf
 
 -- | Add songs which match all of the given words with regard to any
 -- of the metadata.
--- @since 0.13.1
+--
+-- @since 0.13.2
 addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlayAny runMPD xp metas = do
   mkXPrompt (MPDPrompt "Search") xp
@@ -197,7 +202,8 @@ addAndPlayAny runMPD xp metas = do
 
 
 -- | Pick a song from the current playlist.
--- @since 0.13.1
+--
+-- @since 0.13.2
 pickPlayListItem :: RunMPD -> XPConfig -> X ()
 pickPlayListItem runMPD xp = do
   mkXPrompt (MPDPrompt "Pick") xp
