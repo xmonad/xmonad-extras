@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.13.1
+version:            0.13.2
 homepage:           https://github.com/xmonad/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -38,7 +38,7 @@ flag testing
 
 library
 
-    build-depends:      base, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
+    build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
     ghc-options:        -fwarn-tabs -Wall -fno-warn-unused-do-bind
 
     -- Upload blocked by this: https://github.com/haskell/cabal/issues/2527
