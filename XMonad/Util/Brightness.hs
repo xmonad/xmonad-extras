@@ -8,8 +8,9 @@ module XMonad.Util.Brightness
     ) where
 
 import XMonad
+import Data.Traversable (traverse)
 import System.IO (hPutStrLn, stderr)
-import Data.Either.Combinators (mapLeft, swapEither)
+import Data.Bitraversable (bitraverse)
 import Control.Monad (join)
 import Data.Bifunctor (first)
 import Control.Exception (try)
@@ -35,8 +36,8 @@ change f = do
   current <- getFromFile currentfile readInt
   printError =<< apply (writeToFile currentfile) (liftA2 (guard f) max current)
 
-apply :: (Traversable m, Monad m, Monad f) => (a1 -> f (m a2)) -> m a1 -> f (m a2)
-apply f = fmap join . sequence . fmap f
+apply :: (Int -> IO (Either String ())) -> Either String Int -> IO (Either String ())
+apply f = fmap join . traverse f
 
 guard :: (Int -> Int) -> Int -> Int -> Int
 guard f max current
@@ -52,7 +53,7 @@ readInt str = case (reads (unpack str)) of
                 _           -> Left "Could not parse string to int"
 
 printError :: Either String e -> IO (Either () e)
-printError = fmap swapEither . sequence . swapEither . mapLeft (hPutStrLn stderr)
+printError = bitraverse (hPutStrLn stderr) (pure . id)
 
 getFromFile :: FilePath -> (BS.ByteString -> Either String a) -> IO (Either String a)
 getFromFile filename fcast = fmap (fcast =<<) (try' $ BS.readFile filename)
