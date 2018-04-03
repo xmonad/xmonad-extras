@@ -1,6 +1,35 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-
--- | Module to control the brightness of the screen in linux environments
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  XMonad.Util.Brightness
+-- License     :  MIT
+--
+-- Stability   :  unstable
+-- Portability :  unportable
+--
+-- Module to control the brightness of the screen in linux environments
+--
+-- [@Requirements@]
+--     This module assumes that the following files exists:
+--
+--     * __\/sys\/class\/backlight\/intel_backlight\/max_brightness__
+--
+--     * __\/sys\/class\/backlight\/intel_backlight\/brightness__
+--
+--     Also, brightness should be updatable by changing the content of
+--     __\/sys\/class\/backlight\/intel_backlight\/brightness__.
+--
+-- [@Permissions@]
+--     To use this module, the owner of the __xmonad__ process will need to
+--     have permission to write to __\/sys\/class\/backlight\/intel_backlight\/brightness__.
+--     To achieve this, you can:
+--
+--     * Create a group with your user and root and give permissions to this
+--     group to write to the file;
+--
+--     * Allow anyone to write the file through 646 permissions: __-rw-r--rw-__;
+-- 
+-----------------------------------------------------------------------------
 module XMonad.Util.Brightness
     ( increase
     , decrease
