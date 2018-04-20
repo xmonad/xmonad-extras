@@ -1,3 +1,7 @@
+# 0.13.4
+
+* Add brightness control plugin
+
 # 0.13.2
 
 * Add additional functions to MPD. (Credits to @u11gh)
