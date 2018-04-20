@@ -1,4 +1,4 @@
-# 0.13.4
+# 0.13.3
 
 * Add brightness control plugin
 
