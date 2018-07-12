@@ -34,6 +34,7 @@ module XMonad.Util.Brightness
     ( increase
     , decrease
     , change
+    , setBrightness
     ) where
 
 import XMonad
@@ -48,6 +49,7 @@ import Data.ByteString.Char8 (unpack)
 import qualified Data.ByteString as BS
 
 maxfile = "/sys/class/backlight/intel_backlight/max_brightness"
+
 currentfile = "/sys/class/backlight/intel_backlight/brightness"
 
 -- | Update brightness by +100
@@ -57,6 +59,10 @@ increase = liftIO $ change (+100) *> (pure ())
 -- | Update brightness by -100
 decrease :: X ()
 decrease = liftIO $ change (+ (-100)) *> (pure ())
+
+-- | Change brightness to a particular level
+setBrightness :: Int -> X ()
+setBrightness level = liftIO $ change (\_ -> level) *> pure ()
 
 -- | Perform all needed IO to update screen brightness
 change :: (Int -> Int) -> IO (Either () ())
