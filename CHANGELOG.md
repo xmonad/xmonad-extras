@@ -1,3 +1,9 @@
+# 0.13.4
+
+* Enable brightness plugin by default
+* Add `setBrightness` function to the Brightness module
+* Documentation improvements for the brightness plugin
+
 # 0.13.3
 
 * Add brightness control plugin
