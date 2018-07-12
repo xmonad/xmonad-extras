@@ -25,7 +25,36 @@
 --     To achieve this, you can:
 --
 --     * Create a group with your user and root and give permissions to this
---     group to write to the file;
+--     group to write to the file. I usually follow these steps:
+--         
+--         * Create a group named xmonad
+--
+--         > $ sudo groupadd xmonad
+--
+--         * Add user root and your user name to the group xmonad.
+--
+--         > $ sudo usermod -a -G xmonad root
+--         > $ sudo usermod -a -G xmonad sibi
+--
+--         * The files under __\/sys__ are virtual. It's a RAM based filesystem through which you can access kernel data structures. The permission you give there won't persist after reboot. One of the way for persisting is creating a <https://unix.stackexchange.com/a/409780/29539 systemd script>:
+--
+--         > $ cat /etc/systemd/system/brightness.service
+--         > [Unit]
+--         > Description=Set brightness writable to everybody
+--         > Before=nodered.service
+--         > 
+--         > [Service]
+--         > Type=oneshot
+--         > User=root
+--         > ExecStart=/bin/bash -c "chgrp -R -H xmonad /sys/class/backlight/intel_backlight && chmod g+w /sys/class/backlight/intel_backlight/brightness"
+--         > 
+--         > [Install]
+--         > WantedBy=multi-user.target
+--         >
+--         > $ sudo systemctl enable brightness.service
+--         > $ sudo systemctl start brightness.service
+--         > $ sudo systemctl status brightness.service
+--
 --
 --     * Allow anyone to write the file through 646 permissions: __-rw-r--rw-__;
 -- 
@@ -48,8 +77,10 @@ import Control.Applicative (liftA2)
 import Data.ByteString.Char8 (unpack)
 import qualified Data.ByteString as BS
 
+maxfile :: FilePath
 maxfile = "/sys/class/backlight/intel_backlight/max_brightness"
 
+currentfile :: FilePath
 currentfile = "/sys/class/backlight/intel_backlight/brightness"
 
 -- | Update brightness by +100
