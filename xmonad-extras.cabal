@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.13.3
+version:            0.13.4
 homepage:           https://github.com/xmonad/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -34,7 +34,7 @@ flag with_template_haskell
 
 flag with_brightness
   description: Build module for brightness control.
-  default: False
+  default: True
 
 flag testing
   description: Testing mode
