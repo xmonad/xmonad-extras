@@ -70,11 +70,9 @@ module XMonad.Util.Brightness
 import XMonad
 #if (MIN_VERSION_base(4,10,0))
 import Data.Traversable (traverse)
-#else
-import Prelude (traverse)
 #endif
+import Prelude
 import System.IO (hPutStrLn, stderr)
-import Data.Bitraversable (bitraverse)
 import Control.Monad (join)
 import Data.Bifunctor (first)
 import Control.Exception (try)
@@ -126,7 +124,8 @@ readInt str = case (reads (unpack str)) of
                 _           -> Left "Could not parse string to int"
 
 printError :: Either String e -> IO (Either () e)
-printError = bitraverse (hPutStrLn stderr) (pure . id)
+printError es = either (\str -> hPutStrLn stderr str *> (return . Left $ ())) (\_ -> return . Left $ ()) es
+
 
 getFromFile :: FilePath -> (BS.ByteString -> Either String a) -> IO (Either String a)
 getFromFile filename fcast = fmap (fcast =<<) (try' $ BS.readFile filename)
