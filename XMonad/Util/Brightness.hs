@@ -92,6 +92,8 @@ decrease :: X ()
 decrease = liftIO $ change (+ (-100)) *> (pure ())
 
 -- | Change brightness to a particular level
+--
+-- @since 0.13.4
 setBrightness :: Int -> X ()
 setBrightness level = liftIO $ change (\_ -> level) *> pure ()
 
