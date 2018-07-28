@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP#-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  XMonad.Util.Brightness
@@ -67,7 +68,11 @@ module XMonad.Util.Brightness
     ) where
 
 import XMonad
+#if (MIN_VERSION_base(4,10,0))
 import Data.Traversable (traverse)
+#else
+import Prelude (traverse)
+#endif
 import System.IO (hPutStrLn, stderr)
 import Data.Bitraversable (bitraverse)
 import Control.Monad (join)
