@@ -8,22 +8,6 @@ cache:
 matrix:
   fast_finish: true
   include:
-  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=2.0 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
-    compiler: ": #GHC 7.10.3"
-    addons:
-      apt:
-        packages:
-        - cabal-install-2.0
-        - ghc-7.10.3
-        - happy-1.19.5
-        - alex-3.1.7
-        - libasound2
-        - libasound2-dev
-        - c2hs
-        - libxrandr-dev 
-        - libx11-dev
-        sources:
-        - hvr-ghc
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=2.0 HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
     compiler: ": #GHC 8.0.2"
     addons:
@@ -56,6 +40,22 @@ matrix:
         - libx11-dev
         sources:
         - hvr-ghc
+  - env: BUILD=cabal GHCVER=8.4.3 RUN_TESTS=--run-tests
+    compiler: ": #GHC 8.4.3"
+    addons:
+      apt:
+        packages:
+        - cabal-install-2.0
+        - ghc-8.4.3
+        - happy-1.19.5
+        - alex-3.1.7
+        - libasound2
+        - libasound2-dev
+        - c2hs
+        - libxrandr-dev 
+        - libx11-dev
+        sources:
+        - hvr-ghc
   - env: BUILD=stack ARGS="--resolver lts-9.2"
     compiler: ": #stack 8.0.2"
     addons:
@@ -69,6 +69,17 @@ matrix:
         - libx11-dev
   - env: BUILD=stack ARGS="--resolver lts-11.2"
     compiler: ": #stack 8.2.2"
+    addons:
+      apt:
+        packages:
+        - libgmp-dev
+        - libasound2
+        - libasound2-dev
+        - c2hs
+        - libxrandr-dev 
+        - libx11-dev
+  - env: BUILD=stack ARGS="--resolver lts-12.4"
+    compiler: ": #stack 8.4.3"
     addons:
       apt:
         packages:
