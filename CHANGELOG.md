@@ -1,3 +1,7 @@
+# 0.13.4.1
+
+* Finally works with ghc-8.4
+
 # 0.13.4
 
 * Enable brightness plugin by default
