@@ -1,3 +1,7 @@
+# 0.14
+
+* Relax hint and make it compatible with other releases.
+
 # 0.13.4.1
 
 * Finally works with ghc-8.4

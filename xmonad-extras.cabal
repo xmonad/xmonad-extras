@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.13.4.1
+version:            0.14
 homepage:           https://github.com/xmonad/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -55,7 +55,7 @@ library
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        build-depends: hint >= 0.3.3.3 && < 0.8, network
+        build-depends: hint >= 0.3.3.3 && < 0.9, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
