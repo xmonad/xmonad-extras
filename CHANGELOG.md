@@ -1,3 +1,7 @@
+# 0.15
+
+* Relax bounds and make it compatible with other releases.
+
 # 0.14
 
 * Relax hint and make it compatible with other releases.
