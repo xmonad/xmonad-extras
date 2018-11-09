@@ -1,7 +1,8 @@
-resolver: nightly-2018-08-02
+resolver: nightly-2018-09-29
 
 extra-deps:
-- xmonad-0.14
-- xmonad-contrib-0.14
+- xmonad-contrib-0.15
+- xmonad-0.15
 - alsa-mixer-0.2.0.3
-
+- hint-0.9.0
+- libmpd-0.9.0.9

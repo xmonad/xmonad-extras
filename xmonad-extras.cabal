@@ -42,7 +42,7 @@ flag testing
 
 library
 
-    build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.15, xmonad-contrib>=0.10 && <0.15
+    build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.16, xmonad-contrib>=0.10 && <0.16
     ghc-options:        -fwarn-tabs -Wall -fno-warn-unused-do-bind
 
     -- Upload blocked by this: https://github.com/haskell/cabal/issues/2527
@@ -55,7 +55,7 @@ library
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        build-depends: hint >= 0.3.3.3 && < 0.9, network
+        build-depends: hint >= 0.3.3.3 && < 0.10, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
