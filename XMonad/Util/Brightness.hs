@@ -103,16 +103,16 @@ setBrightness level = liftIO $ change (\_ -> level) *> pure ()
 -- | Perform all needed IO to update screen brightness
 change :: (Int -> Int) -> IO (Either () ())
 change f = do
-  max <- getFromFile maxfile readInt
+  maxBright <- getFromFile maxfile readInt
   current <- getFromFile currentfile readInt
-  printError =<< apply (writeToFile currentfile) (liftA2 (guard f) max current)
+  printError =<< apply (writeToFile currentfile) (liftA2 (guard f) maxBright current)
 
 apply :: (Int -> IO (Either String ())) -> Either String Int -> IO (Either String ())
 apply f = fmap join . traverse f
 
 guard :: (Int -> Int) -> Int -> Int -> Int
-guard f max current
-  | value > max = max
+guard f limit current
+  | value > limit = limit
   | value < 0   = 0
   | otherwise = value
   where value = f current
