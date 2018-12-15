@@ -23,6 +23,7 @@ import Text.Regex.Posix ((=~))
 
 import XMonad
 
+import XMonad.Actions.TagWindows
 import XMonad.Util.WindowProperties
 import XMonad.Layout.LayoutBuilder
 
@@ -47,6 +48,7 @@ propertyToQueryRE (And p1 p2) = propertyToQueryRE p1 <&&> propertyToQueryRE p2
 propertyToQueryRE (Or p1 p2) = propertyToQueryRE p1 <||> propertyToQueryRE p2
 propertyToQueryRE (Not p) = not `fmap` propertyToQueryRE p
 propertyToQueryRE (Const b) = return b
+propertyToQueryRE (Tagged s) = ask >>= \w -> liftX (any (=~ s) `fmap` getTags w)
 
 -- | Does given window have this property?
 hasPropertyRE :: PropertyRE -> Window -> X Bool
