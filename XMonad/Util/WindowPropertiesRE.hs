@@ -24,7 +24,7 @@ import Text.Regex.Posix ((=~))
 import XMonad
 
 import XMonad.Util.WindowProperties
-import XMonad.Layout.LayoutBuilderP
+import XMonad.Layout.LayoutBuilder
 
 -- | A wrapper for X.U.WindowProperties.Property.
 -- Checks using regular expression.
