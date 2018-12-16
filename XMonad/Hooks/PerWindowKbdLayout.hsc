@@ -96,6 +96,7 @@ instance Storable XkbStateRec where
             compat_lookup_mods = r_compat_lookup_mods,
             ptr_buttons = r_ptr_buttons
         }
+    poke _ = error "poke is unimplemented and should be unused"
 
 foreign import ccall unsafe "X11/XKBlib.h XkbGetState"
     xkbGetState :: Display -> CUInt -> Ptr XkbStateRec -> IO CInt
