@@ -51,7 +51,7 @@ library
     --     ghc-options:    -Werror
 
     if flag(with_sound)
-        build-depends: alsa-mixer >= 0.2
+        build-depends: alsa-mixer >= 0.3
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
