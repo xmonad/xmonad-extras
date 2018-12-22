@@ -1,3 +1,8 @@
+# 0.15.1
+
+* Make it work with the latest alsa-mixer
+* Fix warnings in the code
+
 # 0.15
 
 * Relax bounds and make it compatible with other releases.
@@ -29,4 +34,3 @@
 * Remove small_base flag.
 * Remove unused dependencies like process, random, unix, directory, old-time, old-locale
 * Remove ghc-options specific to 6.10.1, 7.2
-
