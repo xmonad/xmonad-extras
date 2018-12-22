@@ -126,6 +126,7 @@ install:
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
   set -ex
+  stack install c2hs
   case "$BUILD" in
     stack)
       stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
