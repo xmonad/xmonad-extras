@@ -34,7 +34,6 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
-        - c2hs
         - libxrandr-dev
         - libx11-dev
         sources:
@@ -47,7 +46,6 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
-        - c2hs
         - libxrandr-dev
         - libx11-dev
   - env: BUILD=stack ARGS=""
@@ -58,7 +56,6 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
-        - c2hs
         - libxrandr-dev
         - libx11-dev
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7 RUN_TESTS=--run-tests
@@ -72,7 +69,6 @@ matrix:
         - alex-3.1.7
         - libasound2
         - libasound2-dev
-        - c2hs
         - libxrandr-dev
         - libx11-dev
         sources:
@@ -85,7 +81,6 @@ matrix:
         - libgmp-dev
         - libasound2
         - libasound2-dev
-        - c2hs
         - libxrandr-dev
         - libx11-dev
   allow_failures:
