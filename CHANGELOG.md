@@ -1,5 +1,9 @@
 # 0.15.1
 
+* Brightness plugin: Check for file existence before modifying
+
+# 0.15.1
+
 * Make it work with the latest alsa-mixer
 * Fix warnings in the code
 
