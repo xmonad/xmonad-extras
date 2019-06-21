@@ -79,6 +79,7 @@ import Control.Exception (try)
 import Control.Applicative (liftA2)
 import Data.ByteString.Char8 (unpack)
 import qualified Data.ByteString as BS
+import System.Directory (doesFileExist)
 
 maxfile :: FilePath
 maxfile = "/sys/class/backlight/intel_backlight/max_brightness"
@@ -128,10 +129,18 @@ printError es = either (\str -> hPutStrLn stderr str *> (return . Left $ ())) (\
 
 
 getFromFile :: FilePath -> (BS.ByteString -> Either String a) -> IO (Either String a)
-getFromFile filename fcast = fmap (fcast =<<) (try' $ BS.readFile filename)
+getFromFile filename fcast = do
+  exist <- doesFileExist filename
+  case exist of
+    True -> fmap (fcast =<<) (try' $ BS.readFile filename)
+    False -> pure $ Left $ filename <> " does not exist"
 
 writeToFile :: FilePath -> Int -> IO (Either String ())
-writeToFile filename value = try' $ writeFile filename (show value)
+writeToFile filename value = do
+  exist <- doesFileExist filename
+  case exist of
+    True -> try' $ writeFile filename (show value)
+    False -> pure $ Left $ filename <> " does not exist"
 
 try' :: forall a . IO a -> IO (Either String a)
 try' x = fmap (first show) (try x :: IO (Either IOError a))
