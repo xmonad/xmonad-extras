@@ -68,7 +68,8 @@ module XMonad.Util.Brightness
     ) where
 
 import XMonad
-#if (MIN_VERSION_base(4,10,0))
+#if (MIN_VERSION_base(4,10,1))
+import Data.Monoid ((<>))
 import Data.Traversable (traverse)
 #endif
 import Prelude
