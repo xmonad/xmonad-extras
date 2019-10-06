@@ -1,3 +1,7 @@
+# 0.15.2
+
+* Relax xmonad constraints
+
 # 0.15.1
 
 * Make it work with the latest alsa-mixer
