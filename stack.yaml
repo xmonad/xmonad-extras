@@ -5,3 +5,5 @@ extra-deps:
 - libmpd-0.9.0.10
 - xmonad-contrib-0.16
 - X11-xft-0.3.1
+- alsa-mixer-0.3.0
+- xmonad-0.15
