@@ -1,6 +1,10 @@
-resolver: nightly-2017-07-31
+resolver: nightly-2019-10-06
 
 extra-deps:
-- alsa-mixer-0.2.0.3
-- alsa-core-0.5.0.1
-- libmpd-0.9.0.7
+- hint-0.9.0.2@sha256:148e0766f01e6f5e842d50aad7102173dd27d6fc3b85aa96571bceaaaceace58,2981
+- libmpd-0.9.0.10@sha256:5a2ff5795085425db11e76332833f2596c5512c861c41272489ed29b725e5538,4011
+- xmonad-contrib-0.16@sha256:a47da91613dc8e04c040424ab605acb2e8693bcf76e397f924b39af89b954da1,15927
+- X11-xft-0.3.1
+
+packages:
+- .

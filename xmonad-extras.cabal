@@ -1,5 +1,5 @@
 name:               xmonad-extras
-version:            0.13.3
+version:            0.14.0
 homepage:           https://github.com/xmonad/xmonad-extras
 synopsis:           Third party extensions for xmonad with wacky dependencies
 description:        Various modules for xmonad that cannot be added to xmonad-contrib
@@ -42,7 +42,7 @@ flag testing
 
 library
 
-    build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10 && <0.14, xmonad-contrib>=0.10 && <0.14
+    build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10, xmonad-contrib>=0.10
     ghc-options:        -fwarn-tabs -Wall -fno-warn-unused-do-bind
 
     -- Upload blocked by this: https://github.com/haskell/cabal/issues/2527
@@ -51,16 +51,16 @@ library
     --     ghc-options:    -Werror
 
     if flag(with_sound)
-        build-depends: alsa-mixer >= 0.2
+        build-depends: alsa-mixer >= 0.3.0
         exposed-modules: XMonad.Actions.Volume
 
     if flag(with_hint)
-        build-depends: hint >= 0.3.3.3 && < 0.8, network
+        build-depends: hint >= 0.3.3.3, network
         exposed-modules: XMonad.Actions.Eval XMonad.Prompt.Eval
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd >= 0.9 && < 0.10, bytestring >= 0.9 && < 0.11
+        build-depends: libmpd >= 0.9, bytestring >= 0.9 && < 0.11
         exposed-modules: XMonad.Prompt.MPD
 
     if flag(with_regex_posix)
@@ -91,9 +91,9 @@ library
 --     ghc-options:        -Wall
 --     if !flag(with_hint)
 --         Buildable: False
--- 
+--
 --     if flag(with_hint)
 --         build-depends: network
--- 
+--
 --     if flag(testing)
 --         ghc-options:  -Werror

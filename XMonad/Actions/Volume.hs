@@ -156,13 +156,13 @@ geomMean xs = product xs ** (recip . fromIntegral . length $ xs)
 clip :: (Num t, Ord t) => t -> t
 clip = min 100 . max 0
 
-toRange :: (Integer, Integer) -> Double -> Integer
+toRange :: (CLong, CLong) -> Double -> CLong
 toRange (x, y) d = floor (d * (y' - x') / 100 + x')
   where x' = fromIntegral x
         y' = fromIntegral y
-        
-fromRange :: (Integer, Integer) -> Integer -> Double
-fromRange (x, y) z = fromIntegral (z - x) / fromIntegral (y - x) * 100
+
+fromRange :: (CLong, CLong) -> CLong -> Double
+fromRange (x, y) z = fromIntegral (z - (fromIntegral x)) / fromIntegral (y - x) * 100
 
 modify :: Monad m => (arg -> m value) -> (arg -> value -> m ()) -> arg -> (value -> value) -> m value
 modify get set cs f = do
@@ -171,12 +171,12 @@ modify get set cs f = do
     return v
 
 withControl :: (Control -> IO a) -> [String] -> IO a
-withControl f cs = withMixer "default" $ \mixer -> do 
+withControl f cs = withMixer "default" $ \mixer -> do
   (control:_) <- catMaybes <$> mapM (getControlByName mixer) cs
   f control
 
 alsaGetAll :: [String] -> IO (Double, Bool)
-alsaGetAll = withControl $ \control -> (,) <$> alsaGetVolume control 
+alsaGetAll = withControl $ \control -> (,) <$> alsaGetVolume control
                                            <*> alsaGetMute control
 
 alsaGetVolume :: Control -> IO Double
@@ -195,12 +195,12 @@ alsaGetMute control = do
 alsaSetVolumeAll :: Double -> [String] -> IO ()
 alsaSetVolumeAll v = withControl (alsaSetVolume v)
 
-alsaSetVolume :: Double -> Control -> IO () 
+alsaSetVolume :: Double -> Control -> IO ()
 alsaSetVolume v control = do
   let Just playbackVolume = playback $ volume control
       volChans = value playbackVolume
   range <- getRange playbackVolume
-  forM_ (channels volChans) $ \chan -> do 
+  forM_ (channels volChans) $ \chan -> do
     setChannel chan volChans (toRange range (clip v))
 
 alsaSetMuteAll :: Bool -> [String] -> IO ()
