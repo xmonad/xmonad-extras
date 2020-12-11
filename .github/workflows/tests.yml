@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        resolver: [nightly, lts-16, lts-15, lts-14]
+        resolver: [lts-16, lts-15, lts-14]
 
     steps:
       - name: Clone project
@@ -33,4 +33,5 @@ jobs:
         run: |
             set -ex
             curl -sSL https://get.haskellstack.org/ | sh -s - -f
+            sudo apt install -y libasound2 libasound2-dev libxrandr-dev libx11-dev libgmp-dev
             stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
