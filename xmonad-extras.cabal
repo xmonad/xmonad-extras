@@ -9,7 +9,7 @@ license:            BSD3
 license-file:       LICENSE
 author:             The Daniels Schoepe and Wagner
 maintainer:         Sibi Prabakaran<sibi@psibi.in>, daniel@wagner-home.com, daniel.schoepe@googlemail.com
-cabal-version:      >= 1.2.1
+cabal-version:      >= 1.10
 build-type:         Simple
 extra-source-files:  README.md, CHANGELOG.md
 
@@ -43,6 +43,7 @@ flag testing
 library
 
     build-depends:      base < 5, mtl, containers, X11>=1.4.3, xmonad>=0.10, xmonad-contrib>=0.10
+    default-language: Haskell2010
     ghc-options:        -fwarn-tabs -Wall -fno-warn-unused-do-bind
 
     -- Upload blocked by this: https://github.com/haskell/cabal/issues/2527
