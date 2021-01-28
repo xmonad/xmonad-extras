@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -42,7 +43,6 @@ import Data.String
 import Network.MPD
 import XMonad hiding ((=?))
 import XMonad.Prompt
-import Data.List as L (find, isPrefixOf, nub)
 import qualified Data.ByteString.Char8 as C
 
 -- $usage
@@ -174,7 +174,7 @@ loadPlaylistWith matchFun runMPD xp = do
                                load $ PlaylistName $ C.pack s
                                play Nothing
               return ())
-  
+
 -- | Load an existing playlist and play it.
 loadPlaylist :: RunMPD ->  XPConfig -> X ()
 loadPlaylist = loadPlaylistWith isPrefixOf
@@ -185,8 +185,13 @@ loadPlaylist = loadPlaylistWith isPrefixOf
 -- @since 0.13.2
 addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlayAny runMPD xp metas = do
+#if MIN_VERSION_xmonad_contrib(0,16,9)
+  hist <- historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==)
+#else
+  let hist = historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==)
+#endif
   mkXPrompt (MPDPrompt "Search") xp
-    (historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==))
+    hist
     (\s -> do io $ runMPD $ do
                 clear
                 songlists <- mapM (\t -> do
