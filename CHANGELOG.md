@@ -1,3 +1,7 @@
+# 0.17.1
+
+* Add window inversion module.
+
 # 0.17.0
 
 * Appropriate modifications to MPD.hs to make it compatible with
