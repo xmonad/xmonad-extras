@@ -1,3 +1,8 @@
+# 0.17.0
+
+* Appropriate modifications to MPD.hs to make it compatible with
+  xmonad-0.17.
+
 # 0.15.2
 
 * Relax xmonad constraints
