@@ -61,7 +61,7 @@ library
 --                         XMonad.Hooks.EvalServer
 
     if flag(with_mpd)
-        build-depends: libmpd >= 0.9, bytestring >= 0.9 && < 0.11
+        build-depends: libmpd >= 0.9, bytestring >= 0.9 && < 0.12
         exposed-modules: XMonad.Prompt.MPD
 
     if flag(with_regex_posix)
@@ -69,7 +69,7 @@ library
         exposed-modules: XMonad.Util.WindowPropertiesRE
 
     if flag(with_brightness)
-        build-depends: bytestring >= 0.9 && < 0.11
+        build-depends: bytestring >= 0.9 && < 0.12
         exposed-modules: XMonad.Util.Brightness
 
     if flag(with_template_haskell) && flag(with_hlist)
