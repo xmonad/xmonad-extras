@@ -187,6 +187,8 @@ addAndPlayAny :: RunMPD -> XPConfig -> [Metadata] -> X ()
 addAndPlayAny runMPD xp metas = do
 #if MIN_VERSION_xmonad_contrib(0,16,9)
   hist <- historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==)
+#else if MIN_VERSION_xmonad_contrib(0,18,0,9)
+  hist <- historyCompletionP xp (showXPrompt (MPDPrompt "Search: ") ==)
 #else
   let hist = historyCompletionP (showXPrompt (MPDPrompt "Search: ") ==)
 #endif
