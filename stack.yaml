@@ -1,4 +1,4 @@
-resolver: lts-16.31
+resolver: lts-22.33
 
 extra-deps:
-- libmpd-0.10.0.0
+- libmpd-0.10.0.1
