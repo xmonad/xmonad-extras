@@ -2,3 +2,4 @@ resolver: lts-22.33
 
 extra-deps:
 - libmpd-0.10.0.1
+- xmonad-contrib-0.18.0
