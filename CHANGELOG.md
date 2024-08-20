@@ -1,3 +1,7 @@
+# 0.17.2
+
+* Fixed an incompatibility with MPD.hs an xmonad-contrib version 0.18+.
+
 # 0.17.1
 
 * Add window inversion module.
