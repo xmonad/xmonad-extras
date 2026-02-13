@@ -29,6 +29,7 @@ import XMonad.Core
 import XMonad.Util.Run
 import Language.Haskell.Interpreter
 import Data.List
+import System.Environment
 
 -- $usage
 -- This module provides functions to evaluate haskell expressions at runtime
@@ -75,8 +76,9 @@ defaultEvalConfig = EvalConfig { handleError = handleErrorDefault
 
 -- | Default way to handle(in this case: display) an error during interpretation of an expression.
 handleErrorDefault :: InterpreterError -> X String
-handleErrorDefault err = io (safeSpawn "/usr/bin/xmessage" [replace (show err) "\\n" "\n"]) >>
-                         return "Error"
+handleErrorDefault err = do
+  xmsg <- fmap (maybe "xmessage" id) (io $ lookupEnv "XMONAD_XMESSAGE")
+  io (safeSpawn xmsg [replace (show err) "\\n" "\n"]) >> return "Error"
 
 -- | Returns an Interpreter action that loads the desired modules and interprets the expression.
 interpret' :: EvalConfig -> String -> Interpreter (X String)
