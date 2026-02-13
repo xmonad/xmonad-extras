@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        resolver: [lts-22, lts-21, lts-20, lts-19]
+        resolver: [lts-24, lts-23, lts-22, lts-21, lts-20, lts-19]
 
     steps:
       - name: Clone project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Cache dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v5
         with:
           path: ~/.stack
           key: ${{ runner.os }}-${{ matrix.resolver }}-${{ hashFiles('stack.yaml') }}
@@ -33,6 +33,6 @@ jobs:
         run: |
             set -ex
             curl -sSL https://get.haskellstack.org/ | sh -s - -f
-            sudo apt install -y libasound2 libasound2-dev libxrandr-dev libtinfo-dev
+            sudo apt install -y libasound2t64 libasound2-dev libxrandr-dev libtinfo-dev
             sudo apt install -y libx11-dev libgmp-dev libxss-dev libxft-dev
             stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
