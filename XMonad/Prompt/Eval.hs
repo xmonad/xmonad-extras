@@ -19,6 +19,7 @@ module XMonad.Prompt.Eval (
                            evalPrompt
                           ,evalPromptWithOutput
                           ,showWithDzen
+                          ,defaultEvalConfig
                           ) where
 
 import XMonad
