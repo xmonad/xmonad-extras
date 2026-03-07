@@ -1,3 +1,8 @@
+# 0.17.3
+
+* `X.A.Eval`: Use `$XMONAD_XMESSAGE` instead of hard-coded `/usr/bin/xmessage`.
+* `X.P.Eval`: Reexport `defaultEvalConfig`.
+
 # 0.17.2
 
 * Fixed an incompatibility with MPD.hs an xmonad-contrib version 0.18+.
